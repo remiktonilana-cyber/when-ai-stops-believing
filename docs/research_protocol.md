@@ -1,0 +1,93 @@
+# Research Protocol
+
+## 1. Research Question
+# Research Protocol
+Can AI distinguish a temporary drawdown from the death of a profitable market belief?
+
+When a previously profitable market pattern stops working, can AI determine whether the failure is temporary noise or evidence that the underlying belief has permanently lost its validity?
+
+The goal of this research is not to predict financial markets, but to evaluate how AI systems update beliefs when facing changing evidence in complex environments.
+
+## 2. Research Motivation
+
+Complex environments require intelligent systems that can adapt when previous knowledge becomes unreliable.
+
+Modern AI systems have demonstrated strong capabilities in pattern recognition and prediction. However, a more fundamental challenge remains: when a previously successful belief fails, how should an intelligent system decide whether to maintain, adjust, or abandon that belief?
+
+This research uses financial markets as a measurable testing environment to study belief revision under uncertainty. Financial markets provide historical patterns, continuous feedback, and observable outcomes, allowing us to evaluate how different AI systems update their judgments when confronted with changing evidence.
+
+The goal is not to build a stock prediction model, but to investigate a broader question: how can intelligent systems adapt their understanding when the world no longer behaves according to previous assumptions?
+
+## 3. Hypothesis
+
+This research investigates the following hypotheses:
+
+### H1: Different AI systems exhibit different belief revision behaviors.
+
+When exposed to identical evidence, different AI systems may update their beliefs at different speeds and in different directions.
+
+### H2: Faster belief updates do not necessarily indicate superior intelligence.
+
+An intelligent system should balance adaptation and stability. Overreacting to temporary noise may be as problematic as failing to recognize structural change.
+
+### H3: AI systems may struggle to distinguish temporary noise from permanent changes.
+
+A key challenge for intelligent systems is determining whether a failed pattern represents short-term uncertainty or the disappearance of the underlying relationship.
+
+## 4. Experimental Design
+
+This research follows a two-stage experimental framework.
+
+### Phase 1: Synthetic Market Environment
+
+A controlled synthetic environment will be created where the underlying market relationship is predefined. This allows us to know whether a previously profitable belief is truly maintained or has structurally disappeared.
+
+The purpose of this phase is to evaluate whether AI systems can distinguish temporary fluctuations from permanent changes under controlled conditions.
+
+### Phase 2: Real Market Validation
+
+After evaluating AI behavior in controlled environments, the framework will be applied to real market data.
+
+The purpose of this phase is to examine whether the observed belief revision patterns remain meaningful in complex real-world environments.
+
+### Experimental Principle
+
+The first version of this benchmark focuses on belief revision rather than pattern discovery.
+
+Market patterns will be predefined before evaluation. This separation allows us to measure how AI systems update beliefs when evidence contradicts previous assumptions.
+
+## 5. AI Models
+
+This benchmark evaluates multiple AI systems under identical experimental conditions.
+
+The selected models include:
+
+- DeepSeek
+- GPT
+- Grok
+- Qwen
+
+The purpose of this benchmark is not to rank which AI system is universally superior. Instead, it investigates whether different AI systems exhibit different belief revision behaviors when facing changing evidence.
+
+Each AI system will receive identical information, identical tasks, and identical evaluation criteria.
+
+The evaluation focuses on how AI systems update their beliefs under uncertainty, including:
+
+- whether the system recognizes when previous assumptions become invalid;
+- how quickly the system adjusts its confidence after receiving new evidence;
+- whether the adjustment direction is consistent with the actual underlying environment;
+- whether confidence levels are appropriately calibrated with observed outcomes.
+
+The benchmark evaluates adaptive decision behavior rather than prediction accuracy alone.
+
+A stronger system is not defined as the one that changes its belief fastest, but as the one that achieves a better balance between stability and adaptation.
+
+## 6. Input Format
+
+## 7. Output Format
+
+## 8. Evaluation Metrics
+
+## 9. Experimental Constraints
+
+## 10. Future Extensions
