@@ -84,6 +84,32 @@ A stronger system is not defined as the one that changes its belief fastest, but
 
 ## 6. Input Format
 
+To ensure fair comparison across AI systems, all models will receive identical structured inputs.
+
+The input design consists of four components:
+
+### 1. Historical Belief
+
+The model receives information describing a previously successful pattern, including historical performance, consistency, and reliability indicators.
+
+### 2. New Evidence
+
+The model receives new observations showing changes in performance. These signals are designed to represent either temporary fluctuations or structural changes.
+
+### 3. Context Variables
+
+Additional environmental information is provided, including relevant market conditions and external factors that may influence the interpretation of new evidence.
+
+### 4. Decision Task
+
+Each AI system must answer standardized questions:
+
+- Is the original belief still valid?
+- What is the confidence level of this judgment?
+- Should the belief be maintained, monitored, or abandoned?
+- What evidence contributed most to the updated judgment?
+
+The benchmark evaluates how AI systems update their judgments under identical information conditions.
 ## 7. Output Format
 
 ## 8. Evaluation Metrics
