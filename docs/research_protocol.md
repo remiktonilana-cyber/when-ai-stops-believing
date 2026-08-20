@@ -206,3 +206,23 @@ AI responses are recorded without subjective modification. Human evaluation focu
 All experiments will record model versions, prompts, inputs, and outputs to enable independent reproduction.
 
 ## 10. Future Extensions
+
+This benchmark provides a foundation for studying adaptive intelligence under changing environments.
+
+Future extensions may include:
+
+### 1. More Complex Environments
+
+The framework can be extended beyond financial markets to other complex domains, including economic systems, organizational decisions, and scientific discovery.
+
+### 2. Multi-Agent Evaluation
+
+Future versions may evaluate how multiple AI agents with different roles and information sources coordinate and update their beliefs collectively.
+
+### 3. Human-AI Comparison
+
+The benchmark can be extended to compare human and AI belief revision behaviors under similar uncertainty conditions.
+
+### 4. Adaptive Decision Systems
+
+The framework may contribute to the development of intelligent decision systems that can continuously update their understanding when facing changing environments.
