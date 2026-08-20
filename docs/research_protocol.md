@@ -110,8 +110,38 @@ Each AI system must answer standardized questions:
 - What evidence contributed most to the updated judgment?
 
 The benchmark evaluates how AI systems update their judgments under identical information conditions.
+
 ## 7. Output Format
 
+To enable quantitative comparison, all AI systems must provide structured outputs under the same format.
+
+Each response should include the following components:
+
+### 1. Belief Probability
+
+The estimated probability that the original market belief remains valid (0-100%).
+
+### 2. Decision
+
+The AI system must select one of three standardized decisions:
+
+- MAINTAIN: Continue believing the original pattern remains valid.
+- MONITOR: Reduce confidence and continue observing additional evidence.
+- ABANDON: Consider the original pattern no longer valid.
+
+### 3. Confidence Level
+
+The confidence level of the AI system's judgment (0-100%).
+
+### 4. Key Evidence
+
+The AI system identifies the most influential evidence that contributed to its judgment update.
+
+### 5. Brief Explanation
+
+A concise explanation of the decision.
+
+The benchmark does not evaluate hidden reasoning processes. Instead, it evaluates observable belief revision behavior through structured outputs.
 ## 8. Evaluation Metrics
 
 ## 9. Experimental Constraints
