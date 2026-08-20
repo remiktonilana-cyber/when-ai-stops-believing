@@ -179,4 +179,30 @@ The benchmark combines these metrics to evaluate adaptive intelligence under cha
 
 ## 9. Experimental Constraints
 
+To ensure scientific validity and fair comparison, the benchmark follows several experimental constraints.
+
+### 1. Same Information
+
+All AI systems receive identical information, including historical beliefs, new evidence, and contextual variables.
+
+### 2. Same Prompt Structure
+
+All models are evaluated using the same standardized prompt format to minimize differences caused by task interpretation.
+
+### 3. No Future Leakage
+
+AI systems are not provided with future outcomes during evaluation. Decisions must be based only on information available at the evaluation point.
+
+### 4. Predefined Evaluation Rules
+
+Evaluation metrics and scoring procedures are defined before experiments are conducted and are not modified based on model performance.
+
+### 5. No Manual Intervention
+
+AI responses are recorded without subjective modification. Human evaluation focuses only on predefined metrics.
+
+### 6. Reproducibility
+
+All experiments will record model versions, prompts, inputs, and outputs to enable independent reproduction.
+
 ## 10. Future Extensions
