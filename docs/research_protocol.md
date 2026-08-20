@@ -142,7 +142,40 @@ The AI system identifies the most influential evidence that contributed to its j
 A concise explanation of the decision.
 
 The benchmark does not evaluate hidden reasoning processes. Instead, it evaluates observable belief revision behavior through structured outputs.
+
 ## 8. Evaluation Metrics
+
+The benchmark evaluates AI belief revision behavior through multiple complementary metrics.
+
+A stronger AI system is not defined as the one that changes its belief fastest, but as the one that achieves an appropriate balance between stability and adaptation.
+
+### 1. Belief Update Magnitude
+
+Measures whether an AI system adjusts its belief after receiving new evidence.
+
+The metric captures the magnitude of belief change between initial and updated confidence levels.
+
+### 2. Regime Recognition Accuracy
+
+Measures whether the AI system correctly identifies whether the original pattern remains valid or has structurally disappeared.
+
+This metric evaluates the direction of belief adjustment rather than the magnitude alone.
+
+### 3. Detection Lag
+
+Measures the delay between the actual change of the underlying environment and the AI system's recognition of that change.
+
+The objective is not minimum delay, but appropriate adaptation timing.
+
+### 4. False Abandonment Rate
+
+Measures how frequently an AI system incorrectly abandons a valid pattern due to temporary fluctuations.
+
+### 5. Confidence Calibration
+
+Measures whether the confidence level expressed by an AI system corresponds to its actual performance.
+
+The benchmark combines these metrics to evaluate adaptive intelligence under changing environments.
 
 ## 9. Experimental Constraints
 
