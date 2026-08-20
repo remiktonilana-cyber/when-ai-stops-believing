@@ -71,3 +71,36 @@ The selected parameters are designed to balance interpretability and realism:
 - Lookback window: 20 trading days
 - Signal threshold: 5%
 - Holding period: 5 trading days
+
+## 5. Ground Truth
+
+The synthetic environment provides a predefined ground truth to identify when the momentum belief changes.
+
+The market contains three labeled states:
+
+### Regime 1: VALID
+
+Period:
+Day 0-999
+
+The momentum relationship generates positive expected returns.
+
+### Regime 2: TRANSITION
+
+Period:
+Day 1000-1299
+
+The momentum advantage gradually decreases.
+
+This period represents uncertainty, where the previous belief may still work temporarily but becomes increasingly unreliable.
+
+### Regime 3: INVALID
+
+Period:
+Day 1300-1999
+
+The momentum relationship no longer provides predictive value.
+
+This represents the death of the original market belief.
+
+The predefined labels allow evaluation of whether AI systems can correctly identify structural changes.
