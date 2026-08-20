@@ -39,3 +39,35 @@ The momentum advantage gradually decreases until the previous relationship becom
 Duration: 700 trading days
 
 The original momentum relationship no longer provides predictive value.
+
+## 4. Signal Definition
+
+The synthetic market uses a momentum signal to represent the market belief being evaluated.
+
+### Momentum Signal
+
+The momentum signal is defined as the cumulative return over the previous 20 trading days.
+
+Formula:
+
+Momentum_t = (P_t - P_(t-20)) / P_(t-20)
+
+where P_t represents the current price and P_(t-20) represents the price 20 trading days earlier.
+
+### Trading Rule
+
+A positive momentum signal above 5% is considered a valid momentum opportunity.
+
+The simulated strategy follows:
+
+- If 20-day momentum > 5%, enter a position.
+- Hold the position for 5 trading days.
+- Evaluate subsequent returns.
+
+### Parameter Choice
+
+The selected parameters are designed to balance interpretability and realism:
+
+- Lookback window: 20 trading days
+- Signal threshold: 5%
+- Holding period: 5 trading days
