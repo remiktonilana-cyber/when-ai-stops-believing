@@ -105,3 +105,30 @@ The dataset should demonstrate a gradual decrease in momentum effectiveness as t
 ### 3. Ground Truth Validation
 
 The predefined regime labels are compared with generated market behavior to ensure that the synthetic environment accurately represents the intended structural change.
+
+## 6. Synthetic Dataset Output
+
+The final synthetic dataset will be stored as:
+
+data/synthetic_market.csv
+
+Each row represents one trading day.
+
+The dataset contains both observable variables and hidden evaluation variables.
+
+### Dataset Structure
+
+| Variable | Type | AI Visible |
+|----------|------|-------------|
+| experiment_id | string | No |
+| date | string | Yes |
+| price | float | Yes |
+| return | float | Yes |
+| volume | float | Yes |
+| momentum_20d | float | Yes |
+| signal | integer | Yes |
+| regime | string | No |
+
+The regime variable is retained only for evaluation purposes and will be removed before AI evaluation.
+
+This separation ensures that AI systems must infer structural changes from market observations rather than directly accessing the answer.
