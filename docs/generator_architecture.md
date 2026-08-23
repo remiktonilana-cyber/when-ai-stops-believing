@@ -120,3 +120,34 @@ save_dataset()
 
 Output:
 synthetic_market.csv
+
+## 4. Execution Flow
+
+The generator follows a sequential simulation pipeline.
+
+### Step 1: Initialize Configuration
+
+Load experiment parameters including simulation length, initial price, and signal settings.
+
+### Step 2: Initialize Market State
+
+Create the initial market environment and starting price.
+
+### Step 3: Daily Simulation Loop
+
+For each trading day:
+
+1. Determine the current market regime.
+2. Calculate the regime-dependent momentum strength (alpha).
+3. Generate daily returns based on momentum effects and noise.
+4. Update asset price.
+5. Calculate observable features.
+6. Store the daily observation.
+
+### Step 4: Export Dataset
+
+After simulation completion, export all observations into:
+
+data/synthetic_market.csv
+
+The execution flow ensures that the generated environment is reproducible, interpretable, and consistent with the predefined market belief lifecycle.
