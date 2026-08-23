@@ -81,3 +81,27 @@ The trading signal is generated from the momentum indicator:
 If Momentum_20d > 5%, signal = 1.
 
 Otherwise, signal = 0.
+
+## 5. Data Validation
+
+Before using the synthetic dataset for AI evaluation, the generated environment must be validated.
+
+The validation process ensures that the simulated market follows the intended belief lifecycle.
+
+### 1. Momentum Effect Validation
+
+The relationship between momentum signals and future returns is measured during each regime.
+
+Expected behavior:
+
+- VALID regime: strong positive relationship.
+- TRANSITION regime: weakening relationship.
+- INVALID regime: no meaningful predictive relationship.
+
+### 2. Regime Transition Validation
+
+The dataset should demonstrate a gradual decrease in momentum effectiveness as the market moves from VALID to INVALID.
+
+### 3. Ground Truth Validation
+
+The predefined regime labels are compared with generated market behavior to ensure that the synthetic environment accurately represents the intended structural change.
