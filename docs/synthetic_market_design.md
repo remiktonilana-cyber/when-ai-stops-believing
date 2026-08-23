@@ -104,3 +104,23 @@ The momentum relationship no longer provides predictive value.
 This represents the death of the original market belief.
 
 The predefined labels allow evaluation of whether AI systems can correctly identify structural changes.
+
+## 6. Expected AI Challenge
+
+The main challenge for AI systems is distinguishing temporary underperformance from permanent structural change.
+
+The benchmark evaluates whether AI systems can balance two competing behaviors:
+
+### 1. Over-persistence
+
+An AI system may continue believing in a previously successful pattern even after the underlying relationship has disappeared.
+
+This represents failure to adapt to a changing environment.
+
+### 2. Over-reaction
+
+An AI system may abandon a valid pattern too quickly based on temporary negative evidence.
+
+This represents excessive sensitivity to short-term noise.
+
+A strong adaptive system should maintain useful beliefs while recognizing when environmental changes invalidate previous assumptions.
