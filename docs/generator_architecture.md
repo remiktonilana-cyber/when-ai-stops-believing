@@ -45,3 +45,78 @@ Transforms raw market observations into features visible to AI systems, such as 
 ### Data Exporter
 
 Stores generated observations into a structured dataset for downstream AI evaluation.
+
+## 3. Module Design
+
+### Configuration Layer
+
+Purpose:
+Manage experiment parameters and simulation settings.
+
+Main responsibility:
+Provide centralized control over simulation parameters.
+
+---
+
+### Regime Controller
+
+Purpose:
+Determine the current market regime.
+
+Function:
+get_regime(day)
+
+Input:
+Trading day index.
+
+Output:
+VALID, TRANSITION, or INVALID.
+
+---
+
+### Market Simulator
+
+Purpose:
+Generate synthetic market returns.
+
+Function:
+generate_return()
+
+Input:
+Momentum signal, regime-dependent alpha, and random noise.
+
+Output:
+Daily return.
+
+Core mechanism:
+
+Return = alpha × Momentum + Noise
+
+---
+
+### Feature Calculator
+
+Purpose:
+Generate observable variables available to AI systems.
+
+Function:
+calculate_features()
+
+Input:
+Price history.
+
+Output:
+Momentum indicators and trading signals.
+
+---
+
+### Data Exporter
+
+Purpose:
+Store generated market observations.
+
+Function:
+save_dataset()
+
+Output:
+synthetic_market.csv
