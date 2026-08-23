@@ -33,3 +33,51 @@ Variables used to ensure reproducibility.
 | momentum_20d | 20-day momentum signal | Yes |
 | signal | Trading rule indicator | Yes |
 | regime | True market state label | No |
+
+## 4. Variable Generation Logic
+
+The synthetic market is generated through a regime-dependent return process.
+
+The core return generation mechanism is:
+
+Return_t = alpha_t * Momentum_t + noise_t
+
+where:
+
+- Momentum_t represents the 20-day momentum signal.
+- alpha_t represents the strength of the momentum relationship.
+- noise represents random market fluctuations.
+
+### Price Generation
+
+The asset price evolves according to:
+
+Price_t = Price_(t-1) * (1 + Return_t)
+
+### Regime-dependent Behavior
+
+#### VALID Regime
+
+During the valid regime, momentum has predictive power.
+
+alpha remains positive, meaning stronger past performance increases expected future returns.
+
+#### TRANSITION Regime
+
+During the transition period, alpha gradually decreases.
+
+The relationship between momentum and future returns becomes weaker.
+
+#### INVALID Regime
+
+During the invalid regime, alpha approaches zero or becomes negative.
+
+The original momentum belief no longer provides predictive value.
+
+### Signal Generation
+
+The trading signal is generated from the momentum indicator:
+
+If Momentum_20d > 5%, signal = 1.
+
+Otherwise, signal = 0.
