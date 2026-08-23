@@ -103,3 +103,24 @@ data/synthetic_market.csv
 when executed with:
 
 python src/market_generator.py
+
+## 7. Default Configuration Parameters
+
+The first implementation uses the following default simulation parameters:
+
+| Parameter | Value |
+|---|---|
+| Total simulation days | 2000 |
+| Initial price | 100 |
+| Momentum lookback window | 20 days |
+| VALID regime | Day 0-999 |
+| TRANSITION regime | Day 1000-1299 |
+| INVALID regime | Day 1300-1999 |
+| Initial alpha | 0.5 |
+| Transition alpha | Linear decay from 0.5 to 0 |
+| Invalid alpha | 0 |
+| Noise distribution | Normal distribution N(0,0.01) |
+
+The first 20 observations are treated as a warm-up period because momentum requires historical data.
+
+These parameters are explicitly defined to ensure reproducibility.
