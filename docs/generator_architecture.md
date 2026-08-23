@@ -151,3 +151,88 @@ After simulation completion, export all observations into:
 data/synthetic_market.csv
 
 The execution flow ensures that the generated environment is reproducible, interpretable, and consistent with the predefined market belief lifecycle.
+
+## 5. Function Specification
+
+### load_config()
+
+Purpose:
+Initialize experiment parameters.
+
+Input:
+None.
+
+Output:
+Configuration object.
+
+
+### get_regime(day)
+
+Purpose:
+Determine the current market regime.
+
+Input:
+Trading day index.
+
+Output:
+VALID, TRANSITION, or INVALID.
+
+
+### calculate_alpha(day, regime)
+
+Purpose:
+Determine the strength of the historical belief.
+
+Input:
+Day index and market regime.
+
+Output:
+Alpha value.
+
+
+### generate_return(momentum, alpha)
+
+Purpose:
+Generate synthetic returns.
+
+Input:
+Momentum signal and alpha.
+
+Output:
+Daily return.
+
+
+### update_price(previous_price, return_value)
+
+Purpose:
+Update asset price.
+
+Input:
+Previous price and daily return.
+
+Output:
+New price.
+
+
+### calculate_features(price_history)
+
+Purpose:
+Generate AI-observable features.
+
+Input:
+Historical prices.
+
+Output:
+Momentum indicator and trading signal.
+
+
+### save_dataset(data)
+
+Purpose:
+Export generated observations.
+
+Input:
+Simulation records.
+
+Output:
+synthetic_market.csv.
