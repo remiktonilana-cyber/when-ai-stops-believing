@@ -60,3 +60,46 @@ The generated dataset must contain:
 - regime
 
 The regime variable is retained for evaluation purposes and should not be provided to AI systems during benchmark evaluation.
+
+## 6. Codex Implementation Specification
+
+The implementation should follow the predefined architecture and function specifications.
+
+### Role
+
+The coding agent acts as an implementation engineer responsible for translating the design into executable Python code.
+
+### Context
+
+The generator creates a controlled synthetic market environment for evaluating AI belief revision under changing market regimes.
+
+### Constraints
+
+The implementation should:
+
+- Follow the defined modular architecture.
+- Preserve the predefined mathematical relationships.
+- Avoid introducing additional variables or machine learning models.
+- Keep hidden regime information separated from AI-visible inputs.
+
+### Required Functions
+
+The implementation must include:
+
+- load_config()
+- get_regime(day)
+- calculate_alpha(day, regime)
+- generate_return(momentum, alpha)
+- update_price(previous_price, return_value)
+- calculate_features(price_history)
+- save_dataset(data)
+
+### Validation
+
+The implementation should generate:
+
+data/synthetic_market.csv
+
+when executed with:
+
+python src/market_generator.py
