@@ -132,3 +132,30 @@ The dataset contains both observable variables and hidden evaluation variables.
 The regime variable is retained only for evaluation purposes and will be removed before AI evaluation.
 
 This separation ensures that AI systems must infer structural changes from market observations rather than directly accessing the answer.
+
+
+## Momentum Definition Revision
+
+The initial implementation used average trailing returns as the momentum variable.
+During validation, this representation was found to behave more like a short-term return signal rather than a classical momentum belief.
+
+To preserve the economic interpretation of the experiment, momentum is revised to:
+
+Momentum_t = Price_t / Price_(t-20) - 1
+
+To avoid unstable positive feedback, momentum influence is bounded before return generation.
+
+The revised return generation is:
+
+Return_t = alpha_t × bounded_momentum_t + noise_t
+
+This preserves the intended belief lifecycle:
+
+VALID:
+Momentum has predictive value.
+
+TRANSITION:
+Momentum predictive power decays.
+
+INVALID:
+Momentum no longer provides predictive value.
