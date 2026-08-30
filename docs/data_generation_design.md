@@ -159,3 +159,29 @@ Momentum predictive power decays.
 
 INVALID:
 Momentum no longer provides predictive value.
+
+## Temporal Alignment Specification
+
+Each observation represents an information state before the next return realization.
+
+At time t:
+
+AI-visible features:
+
+- historical price information
+- momentum calculated from previous prices
+- trading signal derived from previous information
+
+Target:
+
+- next period return
+
+Hidden evaluation variable:
+
+- regime
+
+The dataset follows a feature-target separation:
+
+Information at t-1 → Return at t
+
+This prevents ambiguity and ensures correct evaluation of AI belief updating.
