@@ -23,6 +23,12 @@ financial market.
 
 Its purpose is to isolate belief revision under structural change.
 
+The first 20 observations are treated as an initialization period required to
+construct a valid 20-period momentum feature.
+
+This warm-up period is part of the VALID regime but does not yet contain an
+active momentum contribution because the momentum feature is not computable.
+
 ---
 
 ## 2. Market Belief
@@ -35,13 +41,17 @@ The tested belief is:
 > continue performing well in the near future.
 
 This belief is intentionally valid during the first part of the synthetic
-environment.
+environment once sufficient price history exists to evaluate it.
 
 Its predictive strength then gradually decreases and ultimately disappears.
 
 The benchmark therefore creates a controlled belief lifecycle:
 
-Valid belief
+Warm-up
+
+        ↓
+
+Valid observable momentum belief
 
         ↓
 
@@ -55,7 +65,11 @@ Structural deterioration
 
 Invalid belief
 
-The AI system must infer this deterioration from observable evidence.
+The warm-up period is not itself a fourth structural regime.
+
+It is an initialization condition inside VALID.
+
+The AI system must infer structural deterioration from observable evidence.
 
 It is not told directly when the underlying market mechanism changes.
 
@@ -72,14 +86,39 @@ Period:
 
 Day 0-999
 
-During VALID, momentum contains stable positive predictive information about the
-subsequent return.
-
 The structural momentum coefficient is:
 
 beta = 0.005
 
-This regime establishes a belief that is initially justified by evidence.
+Day 0-19 are the warm-up portion of VALID.
+
+During these observations, a complete 20-period price history is not yet
+available.
+
+Therefore:
+
+Momentum_t = missing
+
+Signal_t = missing
+
+Driver_t = 0
+
+Return_(t+1) = epsilon_t
+
+where:
+
+epsilon_t ~ N(0, 0.01)
+
+From Day 20 onward, VALID contains stable positive predictive information about
+the subsequent return.
+
+The warm-up period does not change the regime label or beta value.
+
+Instead, the momentum contribution is temporarily inactive because the internal
+driver is set to zero until observable momentum becomes computable.
+
+This regime establishes a belief that becomes empirically observable and
+initially justified by evidence from Day 20 onward.
 
 ---
 
@@ -141,10 +180,30 @@ Momentum_t = (Price_t - Price_(t-20)) / Price_(t-20)
 
 Momentum_t uses only price information available at time t.
 
-The first 20 observations require a warm-up period because a complete
-20-period price history is not yet available.
+A complete 20-period price history is required.
 
-Momentum_t is AI-visible.
+Therefore:
+
+For Day 0-19:
+
+Momentum_t = missing
+
+For Day 20 onward:
+
+Momentum_t = Price_t / Price_(t-20) - 1
+
+The first fully defined momentum observation is:
+
+Momentum_20 = Price_20 / Price_0 - 1
+
+Warm-up momentum must not be set to zero.
+
+It must not be estimated using future observations.
+
+The missing value represents insufficient information rather than a market
+state.
+
+Momentum_t is AI-visible once it becomes available.
 
 It preserves the economic interpretation of the belief being tested while
 remaining separate from the internal mechanism used to generate returns.
@@ -156,7 +215,13 @@ remaining separate from the internal mechanism used to generate returns.
 The benchmark also provides a simple binary representation of the observable
 momentum belief.
 
-The frozen signal rule is:
+During Day 0-19:
+
+Signal_t = missing
+
+because Momentum_t itself is unavailable.
+
+From Day 20 onward, the frozen signal rule is:
 
 Signal_t = 1 if Momentum_t > 0
 
@@ -164,7 +229,7 @@ Signal_t = 0 otherwise
 
 The signal threshold is therefore fixed at zero.
 
-The interpretation is:
+The interpretation after warm-up is:
 
 - positive 20-period momentum -> active momentum signal;
 - zero or negative 20-period momentum -> inactive momentum signal.
@@ -187,6 +252,20 @@ It must not depend on:
 - the latent momentum driver;
 - downstream AI benchmark performance.
 
+A missing warm-up signal must not be interpreted as:
+
+Signal_t = 0
+
+The distinction is structural:
+
+missing signal
+
+means the belief cannot yet be evaluated;
+
+Signal_t = 0
+
+means observable momentum exists and is zero or negative.
+
 ---
 
 ## 6. Stable Momentum Driver
@@ -199,7 +278,7 @@ could create unstable self-reinforcing price dynamics.
 The benchmark therefore separates the observable economic feature from the
 internal market-generating driver.
 
-The latent driver is:
+After warm-up, the latent driver is:
 
 Driver_t = tanh(Momentum_t / 0.10)
 
@@ -209,6 +288,18 @@ The transformation:
 - bounds the internal driver;
 - reduces unstable recursive feedback;
 - preserves the observable classical momentum definition.
+
+During Day 0-19:
+
+Driver_t = 0
+
+This zero value is an internal initialization convention.
+
+It does not imply:
+
+Momentum_t = 0
+
+and must not be exposed to the AI as an observable momentum state.
 
 Driver_t is internal simulation state.
 
@@ -224,29 +315,57 @@ Return_(t+1) = beta_t * Driver_t + epsilon_t
 
 where:
 
-Driver_t = tanh(Momentum_t / 0.10)
-
-and:
-
 epsilon_t ~ N(0, 0.01)
 
 The structural coefficient beta_t depends on the hidden regime.
 
-### VALID
+### Warm-Up
+
+For Day 0-19:
 
 beta_t = 0.005
 
+Driver_t = 0
+
+therefore:
+
+Return_(t+1) = epsilon_t
+
+The warm-up price path is therefore generated from Gaussian noise only.
+
+### VALID after Warm-Up
+
+From Day 20 to Day 999:
+
+beta_t = 0.005
+
+Driver_t = tanh(Momentum_t / 0.10)
+
+Momentum contains detectable positive predictive information.
+
 ### TRANSITION
+
+From Day 1000 to Day 1299:
 
 beta_t decreases linearly from 0.005 to 0.
 
+Momentum predictive strength progressively deteriorates.
+
 ### INVALID
+
+From Day 1300 to Day 1999:
 
 beta_t = 0
 
+Momentum no longer contributes to subsequent return generation.
+
 The resulting lifecycle is therefore:
 
-VALID:
+Warm-up inside VALID:
+
+No observable momentum contribution yet exists.
+
+VALID after warm-up:
 
 Momentum contains detectable positive predictive information.
 
@@ -272,7 +391,7 @@ observable information at time t
 
 subsequent realized return from t to t+1
 
-The causal sequence is:
+For Day 20 onward, the causal sequence is:
 
 Price history through time t
 
@@ -296,12 +415,36 @@ Return_(t+1)
 
 Price_(t+1)
 
+During Day 0-19, the causal sequence is:
+
+Price_t
+
+        ↓
+
+Momentum_t unavailable
+
+        ↓
+
+Signal_t unavailable
+
+        ↓
+
+Driver_t = 0
+
+        ↓
+
+Return_(t+1) = epsilon_t
+
+        ↓
+
+Price_(t+1)
+
 The price update is:
 
 Price_(t+1) = Price_t * (1 + Return_(t+1))
 
-Momentum_t and Signal_t must therefore be calculated before Return_(t+1) is
-realized.
+Momentum_t and Signal_t must therefore be calculated, or explicitly recognized
+as unavailable during warm-up, before Return_(t+1) is realized.
 
 No future information may be used in their construction.
 
@@ -332,6 +475,15 @@ Potential AI-visible variables include:
 - momentum_20d;
 - signal.
 
+During Day 0-19:
+
+- momentum_20d is missing;
+- signal is missing.
+
+This missingness is part of the truthful observable information state.
+
+From Day 20 onward, both variables are fully defined.
+
 ### Hidden Ground Truth
 
 The following variable must remain hidden during AI evaluation:
@@ -344,6 +496,12 @@ The following variable is used internally by the generator but must not be
 provided as an AI-visible feature:
 
 - Driver_t.
+
+During warm-up:
+
+Driver_t = 0
+
+This internal zero must not be substituted for missing observable momentum.
 
 experiment_id is simulation metadata rather than an AI-visible market variable.
 
@@ -360,7 +518,16 @@ The synthetic environment contains a predefined structural ground truth.
 
 Day 0-999
 
-Momentum contributes positively to subsequent return generation.
+beta = 0.005
+
+Day 0-19:
+
+the regime is VALID, but the momentum mechanism is inactive because a valid
+20-period momentum observation does not yet exist.
+
+Day 20-999:
+
+momentum contributes positively to subsequent expected return generation.
 
 ### TRANSITION
 
@@ -381,6 +548,8 @@ decisions.
 
 The ground truth allows the researcher to measure when and how the AI updates
 relative to the actual structural deterioration.
+
+Warm-up is a feature-availability condition, not a hidden ground-truth regime.
 
 ---
 
@@ -411,6 +580,9 @@ It should retain a belief while the evidence continues to justify it, while
 also revising that belief when accumulated evidence indicates structural
 deterioration.
 
+The warm-up period should not be interpreted as evidence for or against the
+momentum belief because the relevant observable feature is not yet defined.
+
 ---
 
 ## 12. Experimental Interpretation
@@ -424,7 +596,13 @@ The three regimes provide the structural lifecycle.
 
 Noise creates ambiguous evidence.
 
-The AI system's task is to determine whether observed failures represent:
+The warm-up period provides the minimum historical state needed to construct the
+observable belief variable.
+
+It is not itself part of the belief-revision challenge.
+
+The AI system's task is to determine whether observed failures after the belief
+becomes measurable represent:
 
 - temporary stochastic variation;
 - gradual weakening of the original relationship; or
@@ -444,15 +622,39 @@ Total simulation length:
 
 2000 periods
 
-Momentum:
+Warm-up:
+
+Day 0-19
+
+Momentum during warm-up:
+
+missing
+
+Signal during warm-up:
+
+missing
+
+Internal driver during warm-up:
+
+Driver_t = 0
+
+Warm-up return:
+
+Return_(t+1) = epsilon_t
+
+Momentum after warm-up:
 
 Momentum_t = Price_t / Price_(t-20) - 1
 
-Signal:
+First valid momentum observation:
+
+Momentum_20 = Price_20 / Price_0 - 1
+
+Signal after warm-up:
 
 Signal_t = 1 if Momentum_t > 0, otherwise 0
 
-Latent driver:
+Latent driver after warm-up:
 
 Driver_t = tanh(Momentum_t / 0.10)
 
@@ -486,7 +688,11 @@ Temporal target:
 
 Information at time t -> Return from t to t+1
 
-The signal threshold is fixed at zero and is not a calibrated parameter.
+The signal threshold is fixed at zero from Day 20 onward and is not a calibrated
+parameter.
+
+The warm-up convention is a structural initialization rule and is not a
+calibrated parameter.
 
 The benchmark generator contains no fixed five-period holding rule.
 
@@ -499,6 +705,24 @@ Any earlier specification using:
 
 is superseded by the current frozen design.
 
-Any future change to these frozen market-design assumptions must be treated as
-an explicit experimental design revision rather than an implementation
-adjustment.
+The only intentional missing values in the exported dataset are:
+
+- momentum_20d during Day 0-19;
+- signal during Day 0-19.
+
+Any future change to:
+
+- warm-up length;
+- warm-up missing-value semantics;
+- warm-up driver behavior;
+- momentum definition;
+- signal definition;
+- signal threshold;
+- latent driver transformation;
+- beta schedule;
+- noise process;
+- regime boundaries;
+- temporal alignment
+
+must be treated as an explicit experimental design revision rather than an
+implementation adjustment.

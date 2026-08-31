@@ -75,8 +75,8 @@ The final synthetic dataset contains the following fields:
 | price | float | Observable synthetic asset price at time t | Yes |
 | return | float | Realized next-period return from t to t+1 | Yes |
 | volume | float | Observable trading activity indicator at time t | Yes |
-| momentum_20d | float | Classical 20-period price momentum at time t | Yes |
-| signal | integer | Trading-rule indicator derived from information available at time t | Yes |
+| momentum_20d | float / missing | Classical 20-period price momentum at time t; missing during warm-up | Yes |
+| signal | integer / missing | Binary momentum indicator at time t; missing during warm-up | Yes |
 | regime | string | Hidden true market regime | No |
 
 The dataset is exported to:
@@ -86,6 +86,9 @@ data/synthetic_market.csv
 The regime variable is retained only for benchmark evaluation.
 
 It must be excluded from AI-visible benchmark inputs.
+
+Missing values in momentum_20d and signal during the first 20 observations are
+intentional warm-up missingness rather than simulation errors.
 
 ---
 
@@ -108,8 +111,11 @@ The row semantics are:
 The causal ordering is:
 
 Information at time t
+
 → internal return-generation mechanism
+
 → Return from t to t+1
+
 → Price_(t+1)
 
 The price transition must satisfy:
@@ -143,17 +149,48 @@ returns while the momentum relationship remains valid.
 The first 20 observations constitute a warm-up period because the momentum
 feature requires 20 periods of historical price information.
 
+During the warm-up period:
+
+- momentum_20d is undefined and is stored as a missing value;
+- signal is undefined and is stored as a missing value;
+- the internal momentum driver is set to 0;
+- the return is therefore generated from Gaussian noise only.
+
+Formally, for Day 0-19:
+
+Driver_t = 0
+
+and:
+
+Return_(t+1) = epsilon_t
+
+where:
+
+epsilon_t ~ N(0, 0.01)
+
+This warm-up convention is not interpreted as negative or inactive momentum.
+
+A missing signal means that insufficient price history exists to evaluate the
+momentum belief.
+
+From Day 20 onward, Momentum_t and Signal_t must be fully defined according to
+the frozen momentum and zero-threshold signal rules.
+
+The warm-up convention exists only to initialize sufficient price history. It
+does not alter the hidden regime schedule: Day 0-19 remain part of the VALID
+regime, but the momentum mechanism is inactive until Momentum_t becomes
+computable.
+
 ---
 
 ## 6. Signal Generation
-
 
 The signal variable is a simple binary representation of the observable
 momentum belief.
 
 It is generated exclusively from information available at time t.
 
-The fixed rule is:
+After the warm-up period, the fixed rule is:
 
 Signal_t = 1 if Momentum_t > 0
 
@@ -163,9 +200,13 @@ where:
 
 Momentum_t = Price_t / Price_(t-20) - 1
 
+During Day 0-19, Signal_t is undefined and stored as a missing value because
+Momentum_t itself is undefined.
+
 The zero threshold is intentionally not calibrated.
 
 Its purpose is not to maximize strategy performance or benchmark separation.
+
 It provides a transparent operational interpretation of the momentum belief:
 
 - positive 20-period momentum -> active momentum signal;
@@ -208,11 +249,15 @@ Observable price history
 
 → Return_(t+1)
 
+During the first 20 observations, Observable Momentum_t is unavailable and the
+internal Driver_t is explicitly set to 0 as the frozen warm-up convention.
+
 ---
 
 ## 8. Internal Stable Momentum Driver
 
-The observable momentum variable is transformed internally as:
+After the warm-up period, the observable momentum variable is transformed
+internally as:
 
 Driver_t = tanh(Momentum_t / 0.10)
 
@@ -238,10 +283,20 @@ Momentum_t = Price_t / Price_(t-20) - 1
 The distinction is therefore:
 
 Observable belief variable:
+
 Momentum_t
 
-Internal simulation driver:
+Internal simulation driver after warm-up:
+
 Driver_t = tanh(Momentum_t / 0.10)
+
+During Day 0-19:
+
+Driver_t = 0
+
+This zero-driver convention is an initialization rule only. It does not encode
+zero momentum and must not be exposed to the AI system as an observed momentum
+state.
 
 ---
 
@@ -266,6 +321,14 @@ The stochastic component is:
 
 epsilon_t
 
+During Day 0-19:
+
+Driver_t = 0
+
+and therefore:
+
+Return_(t+1) = epsilon_t
+
 The momentum component must be detectable during VALID without dominating the
 stochastic component strongly enough to generate a deterministic price
 attractor.
@@ -286,14 +349,20 @@ Parameter:
 
 beta = 0.005
 
-During VALID, momentum contains stable positive predictive information.
+During VALID, momentum contains stable positive predictive information once the
+20-period momentum feature becomes available.
 
-The intended relationship is:
+The intended relationship after warm-up is:
 
 higher Momentum_t
+
 → higher expected Return_(t+1)
 
 The relationship is intentionally noisy rather than deterministic.
+
+Day 0-19 remain labeled VALID for ground-truth regime continuity, but the
+momentum driver is inactive during this initialization period because
+Momentum_t is not yet computable.
 
 ---
 
@@ -345,12 +414,15 @@ process.
 The synthetic environment represents the following lifecycle:
 
 VALID
-→ momentum is genuinely predictive
+
+→ momentum is genuinely predictive after warm-up
 
 TRANSITION
+
 → predictive strength progressively decays
 
 INVALID
+
 → momentum no longer has predictive value
 
 The benchmark does not tell the AI when these structural changes occur.
@@ -406,7 +478,9 @@ the return process.
 Conceptually, this took the form:
 
 bounded momentum
+
 → regime-dependent coefficient
+
 → return
 
 Although clipping limited magnitude, validation showed that it did not eliminate
@@ -481,17 +555,20 @@ following conditions.
 - no NaN-driven simulation failure;
 - no persistent driver saturation.
 
+The intentional warm-up missing values in momentum_20d and signal are not
+considered NaN-driven simulation failures.
+
 ### 13.2 Momentum-State Diversity
 
-During VALID:
+During VALID after warm-up:
 
 - both positive and negative momentum observations should occur;
 - neither momentum sign should dominate nearly the entire regime.
 
 ### 13.3 Detectable VALID Relationship
 
-Momentum should exhibit a positive predictive relationship with next-period
-return during VALID.
+After warm-up, momentum should exhibit a positive predictive relationship with
+next-period return during VALID.
 
 ### 13.4 Transitional Decay
 
@@ -530,6 +607,7 @@ are frozen as follows:
 | Total simulation days | 2000 |
 | Initial price | 100 |
 | Momentum lookback | 20 periods |
+| Signal threshold | 0 |
 | Momentum transformation scale | 0.10 |
 | VALID period | Day 0-999 |
 | TRANSITION period | Day 1000-1299 |
@@ -538,11 +616,19 @@ are frozen as follows:
 | TRANSITION beta | Linear decay from 0.005 to 0 |
 | INVALID beta | 0 |
 | Noise standard deviation | 0.01 |
+| Warm-up period | Day 0-19 |
+| Warm-up momentum_20d | Missing |
+| Warm-up signal | Missing |
+| Warm-up internal driver | 0 |
+| Warm-up return mechanism | Gaussian noise only |
 
 The selected parameter set was not chosen to maximize predictive correlation.
 
 It was selected as the minimum sufficient signal that remained dynamically
 stable and statistically detectable across random seeds.
+
+The zero signal threshold and warm-up convention are structural design choices,
+not parameters to be optimized against downstream benchmark outcomes.
 
 ---
 
@@ -578,6 +664,10 @@ TRANSITION contains only 300 observations and is deliberately non-stationary, so
 finite-sample correlation estimates may fluctuate even when the underlying beta
 schedule decreases monotonically.
 
+The calibration evidence predates the explicit documentation of the warm-up
+missing-value convention. The convention does not change the calibrated
+post-warm-up mechanism or its frozen parameters.
+
 ---
 
 ## 16. Validation Requirements
@@ -592,8 +682,17 @@ The generator must:
 - produce exactly 2000 observations;
 - contain the required dataset fields;
 - preserve the frozen regime boundaries;
-- handle the 20-period warm-up consistently;
-- contain no unexpected NaN or infinite values.
+- treat Day 0-19 as the warm-up period;
+- store momentum_20d as missing during Day 0-19;
+- store signal as missing during Day 0-19;
+- set the internal driver to 0 during Day 0-19;
+- generate warm-up returns from Gaussian noise only;
+- contain no missing momentum_20d or signal values from Day 20 onward;
+- contain no NaN or infinite values in price, return, or volume;
+- contain no unexpected NaN or infinite values elsewhere.
+
+The only intentionally permitted missing values are momentum_20d and signal
+during Day 0-19.
 
 ### 16.2 Temporal Validation
 
@@ -605,9 +704,32 @@ The generator must verify that:
 - Price_(t+1) is generated from Price_t and Return_(t+1);
 - no future observation contributes to a current feature.
 
-### 16.3 Dynamic Validation
+For Day 20 onward, Momentum_t must equal:
 
-The VALID regime should exhibit:
+Momentum_t = Price_t / Price_(t-20) - 1
+
+using the prices stored at the corresponding observable times.
+
+### 16.3 Signal Validation
+
+For every observation from Day 20 onward:
+
+- if Momentum_t > 0, Signal_t must equal 1;
+- if Momentum_t <= 0, Signal_t must equal 0.
+
+For Day 0-19:
+
+- Signal_t must be missing;
+- the missing signal must not be interpreted as Signal_t = 0.
+
+The validation procedure must verify exact agreement between momentum_20d and
+signal after warm-up.
+
+The signal threshold must not be adjusted based on validation results.
+
+### 16.4 Dynamic Validation
+
+The VALID regime after warm-up should exhibit:
 
 - both positive and negative momentum states;
 - limited driver saturation;
@@ -619,7 +741,7 @@ Across the lifecycle:
 - predictive strength should weaken on average through TRANSITION;
 - momentum predictive information should be approximately zero in INVALID.
 
-### 16.4 Ground Truth Validation
+### 16.5 Ground Truth Validation
 
 Observed synthetic-market behavior should be checked against the known
 regime-generating mechanism.
@@ -627,7 +749,9 @@ regime-generating mechanism.
 The hidden regime schedule is:
 
 VALID
+
 → TRANSITION
+
 → INVALID
 
 Validation establishes that the generated evidence stream is consistent with the
@@ -637,20 +761,24 @@ intended structural change before the dataset is used to evaluate AI systems.
 
 ## 17. Design Freeze Rule
 
-The Stable Momentum Driver parameters are now frozen for the benchmark.
+The Stable Momentum Driver parameters and warm-up convention are now frozen for
+the benchmark.
 
 They must not be further optimized against downstream AI benchmark outcomes.
 
 In particular, AI performance must not be used to retune:
 
 - momentum lookback;
+- signal threshold;
 - momentum transformation scale;
 - beta values;
 - beta transition schedule;
 - noise standard deviation;
 - regime boundaries;
 - temporal alignment;
-- observable feature definitions.
+- observable feature definitions;
+- warm-up missing-value semantics;
+- warm-up driver behavior.
 
 Doing so after observing benchmark results would contaminate the experimental
 design by allowing the environment to adapt to the systems being evaluated.
@@ -664,9 +792,25 @@ experimental design version rather than as routine implementation tuning.
 
 For the current benchmark version, the active data-generating specification is:
 
+For Day 0-19:
+
+Momentum_t = missing
+
+Signal_t = missing
+
+Driver_t = 0
+
+Return_(t+1) = epsilon_t
+
+For Day 20 onward:
+
 Momentum_t = Price_t / Price_(t-20) - 1
 
+Signal_t = 1 if Momentum_t > 0, otherwise 0
+
 Driver_t = tanh(Momentum_t / 0.10)
+
+For all periods:
 
 Return_(t+1) = beta_t * Driver_t + epsilon_t
 
@@ -675,17 +819,33 @@ epsilon_t ~ N(0, 0.01)
 with:
 
 VALID:
+
+Day 0-999
+
 beta = 0.005
 
 TRANSITION:
+
+Day 1000-1299
+
 beta decreases linearly from 0.005 to 0
 
 INVALID:
+
+Day 1300-1999
+
 beta = 0
 
 and:
 
 Price_(t+1) = Price_t * (1 + Return_(t+1))
+
+The warm-up observations remain labeled VALID, but the momentum contribution is
+inactive because Driver_t is explicitly set to 0 until Momentum_t becomes
+computable.
+
+Missing momentum_20d and signal values during Day 0-19 are intentional and are
+the only expected missing values in the generated dataset.
 
 All earlier direct-alpha and clipped-momentum mechanisms are superseded.
 
