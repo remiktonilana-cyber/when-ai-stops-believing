@@ -632,6 +632,52 @@ not parameters to be optimized against downstream benchmark outcomes.
 
 ---
 
+
+### Reproducibility and Auxiliary Variable Specification
+
+The canonical benchmark dataset uses:
+
+- random seed: 42
+- start date: 2000-01-03
+- experiment_id: momentum_decay_seed_42
+
+The volume variable is an observable nuisance variable and is not part of the
+structural momentum mechanism.
+
+Volume is generated independently as:
+
+ln(Volume_t) ~ Normal(ln(1,000,000), 0.25^2)
+
+Volume must contain no regime-dependent structure and must not directly affect:
+
+- Momentum_t;
+- Signal_t;
+- Driver_t;
+- beta_t;
+- Return_(t+1).
+
+The stochastic process used for volume must be independent from the stochastic
+process used for return noise.
+
+The canonical implementation must therefore use separate random-number streams
+for:
+
+- return noise;
+- volume generation.
+
+Both streams must be deterministically derived from the canonical random seed.
+
+The canonical implementation derives the two independent streams using
+numpy.random.SeedSequence(42).spawn(2), with the first child stream assigned to
+return noise and the second child stream assigned to volume generation.
+
+Changing the volume-generation process must not change the sequence of return
+noise generated for the same canonical seed.
+
+These settings are reproducibility specifications rather than calibrated model
+parameters.
+
+
 ## 15. Calibration Evidence
 
 Across the 20-seed falsification stress test, the frozen configuration produced:

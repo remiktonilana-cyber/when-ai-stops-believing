@@ -401,6 +401,12 @@ The implementation must:
 - avoid calibrating or optimizing the signal threshold;
 - avoid optimizing generator parameters against downstream AI benchmark
   performance.
+- derive independent deterministic random-number streams for return noise and
+  volume generation from the canonical seed;
+- ensure that changing or removing volume generation does not alter the return
+  noise sequence;
+- keep volume independent of regime, momentum, signal, driver, beta, and return
+  generation;
 
 The coding agent must not independently choose alternative warm-up behavior.
 
@@ -642,7 +648,11 @@ The benchmark generator uses the following calibrated and frozen configuration:
 | Warm-up signal | Missing |
 | Warm-up internal driver | 0 |
 | Warm-up return mechanism | Gaussian noise only |
-
+| Canonical random seed | 42 |
+| Start date | 2000-01-03 |
+| Experiment ID | momentum_decay_seed_42 |
+| Volume distribution | ln(Volume_t) ~ Normal(ln(1,000,000), 0.25^2) |
+| RNG architecture | SeedSequence(42).spawn(2): first child = return noise; second child = volume |
 The zero signal threshold is a design choice rather than a calibrated parameter.
 
 It must not be modified in response to generator validation results or downstream
