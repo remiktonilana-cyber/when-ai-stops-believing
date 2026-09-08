@@ -221,11 +221,13 @@ Adaptation Delay measures the time required for the AI system to recognize that 
 
 Result:
 
-5 days
+15 days
 
-The environment becomes invalid at Day 1300.
+The environment becomes INVALID at Day 1300.
 
-The baseline agent changes to INVALID belief state at Day 1305.
+The baseline agent remains VALID until Day 1305, enters UNCERTAIN at Day 1305, and changes to INVALID at Day 1315.
+
+Therefore, the baseline requires 15 days after structural invalidation to fully abandon the previous belief.
 
 ### 6.2 False Persistence
 
@@ -233,9 +235,11 @@ False Persistence measures whether an AI system continues maintaining an outdate
 
 Result:
 
-0 days
+5 days
 
-The baseline agent does not continue maintaining a VALID belief after structural invalidation.
+The environment becomes INVALID at Day 1300, while the baseline agent remains in the VALID belief state until Day 1305.
+
+The baseline therefore exhibits 5 days of false persistence after structural invalidation.
 
 ### 6.3 False Abandonment
 
@@ -245,29 +249,42 @@ Result:
 
 0 days
 
-During the stable VALID phase, the baseline agent maintains the original belief.
+During the stable VALID phase, the baseline agent maintains the original belief and does not prematurely enter UNCERTAIN or INVALID.
 
 ### 6.4 Belief Boundary Awareness
 
-Belief Boundary Awareness measures whether an AI system recognizes increasing uncertainty before complete structural failure.
+Belief Boundary Awareness measures whether an AI system enters uncertainty before complete structural invalidation.
 
 Result:
 
-7 days
+None
 
-The baseline agent enters UNCERTAIN state 7 days before complete invalidation.
+The environment becomes INVALID at Day 1300.
+
+The baseline agent does not enter UNCERTAIN until Day 1305.
+
+Therefore, no pre-invalidation Belief Boundary Awareness is observed in this baseline run.
 
 ## 7. Experimental Result
 
+The causally valid baseline belief trajectory is:
+
+- Day 0–1304: `VALID`
+- Day 1305–1314: `UNCERTAIN`
+- Day 1315 onward: `INVALID`
+
 The baseline experiment demonstrates the following behaviors:
 
-Capability	Result
-Maintain valid beliefs	Passed
-Detect structural invalidation	Passed
-Avoid premature abandonment	Passed
-Recognize uncertainty before failure	Passed
+| Capability | Result |
+| --- | --- |
+| Maintain the belief during the stable VALID phase | Passed |
+| Eventually detect structural invalidation | Passed |
+| Avoid premature abandonment during the stable VALID phase | Passed |
+| Recognize uncertainty before complete invalidation | Not observed |
 
-The result shows that adaptive intelligence can be evaluated not only by whether a system learns useful patterns, but also by whether it recognizes when those patterns should no longer be trusted.
+The baseline therefore succeeds at eventually revising an invalidated belief without prematurely abandoning it during the stable VALID phase, but it does not anticipate the validity boundary before complete structural invalidation.
+
+This distinction is important: eventual belief revision and early boundary awareness are separate capabilities. A system may successfully abandon a failed belief while still reacting only after the underlying relationship has already become invalid.
 
 ## 8. Research Implication
 
