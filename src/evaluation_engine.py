@@ -213,8 +213,9 @@ def calculate_false_abandonment(
     belief_history,
 ):
     """
-    Measure whether AI abandons a valid belief
-    while the original relationship is still valid.
+    Count INVALID beliefs while ground truth remains stably VALID.
+
+    UNCERTAIN is a boundary state, not abandonment.
     """
 
     transitions = get_transition_reference(
@@ -246,7 +247,7 @@ def calculate_false_abandonment(
 
     abandoned_days = stable_valid_period[
         stable_valid_period["belief_status"]
-        != "VALID"
+        == "INVALID"
     ]
 
 

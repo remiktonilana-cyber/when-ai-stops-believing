@@ -85,10 +85,14 @@ This metric captures failure caused by excessive attachment to historical patter
 ### 3.3 False Abandonment
 
 
-False Abandonment measures whether an AI system abandons a valid belief before structural change occurs.
+False Abandonment counts observations where `belief_status == INVALID` while
+the environment remains in its stable ground-truth VALID period.
 
 
 This metric captures excessive sensitivity to temporary noise.
+
+`UNCERTAIN` does not count as abandonment under the v0.2 three-state belief
+semantics.
 
 ### 3.4 Confidence Calibration
 

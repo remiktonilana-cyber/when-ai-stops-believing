@@ -249,7 +249,9 @@ Result:
 
 0 days
 
-During the stable VALID phase, the baseline agent maintains the original belief and does not prematurely enter UNCERTAIN or INVALID.
+During the stable VALID phase, the baseline agent does not prematurely enter
+INVALID. `UNCERTAIN` would represent boundary awareness and would not count as
+abandonment under the v0.2 three-state belief semantics.
 
 ### 6.4 Belief Boundary Awareness
 

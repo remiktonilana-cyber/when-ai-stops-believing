@@ -315,10 +315,13 @@ This captures failure caused by excessive attachment to historical patterns.
 ## 7.3 False Abandonment
 
 
-Measures whether an AI system abandons a valid belief before structural change occurs.
+Measures premature transition to `belief_status == INVALID` while the
+underlying belief remains in the stable ground-truth VALID period.
 
 
 This captures excessive sensitivity to noise.
+
+`UNCERTAIN` is an explicit boundary state and does not count as abandonment.
 
 
 ---
