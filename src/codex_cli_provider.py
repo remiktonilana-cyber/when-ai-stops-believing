@@ -69,7 +69,7 @@ def _run_codex(command, prompt, timeout):
 class CodexCLIProvider:
     """Map one assembled benchmark context through an ephemeral Codex turn."""
 
-    def __init__(self, executable="codex", timeout=120, runner=None):
+    def __init__(self, executable="codex", timeout=300, runner=None):
         self.executable = executable
         self.timeout = timeout
         self.runner = runner or _run_codex

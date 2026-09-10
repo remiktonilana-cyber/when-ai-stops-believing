@@ -55,7 +55,7 @@ class CodexCLIProviderTests(unittest.TestCase):
         self.assertIn("--ignore-rules", command)
         self.assertEqual(command[-1], "-")
         self.assertEqual(schema, BELIEF_OUTPUT_SCHEMA)
-        self.assertEqual(timeout, 120)
+        self.assertEqual(timeout, 300)
         self.assertIn(json.dumps(self.context, sort_keys=True, separators=(",", ":")), prompt)
         for forbidden in ('"regime"', '"beta"', '"driver"', '"future_return"'):
             self.assertNotIn(forbidden, prompt.lower())

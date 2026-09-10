@@ -125,10 +125,12 @@ def _resolve_previous_prediction(previous_prediction, observation):
     }
 
 
-def run_llm_agent(observations, model_callable):
+def run_llm_agent(observations, model_callable, belief_callback=None):
     """Run a provider callback over a causal observation sequence."""
     if not callable(model_callable):
         raise TypeError("model_callable must be callable")
+    if belief_callback is not None and not callable(belief_callback):
+        raise TypeError("belief_callback must be callable")
 
     belief_history = []
     resolved_evidence = []
@@ -171,5 +173,8 @@ def run_llm_agent(observations, model_callable):
                 "prediction": prediction,
             }
         )
+
+        if belief_callback is not None:
+            belief_callback(deepcopy(belief_history))
 
     return belief_history
