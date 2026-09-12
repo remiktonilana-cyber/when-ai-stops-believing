@@ -1,130 +1,148 @@
-# when-ai-stops-believing
-
-An open benchmark studying whether AI systems can recognize when previously useful beliefs become unreliable under changing environments.
-
-
 # When Should AI Stop Believing?
 
+## Project overview
 
-## Can AI recognize when a previously useful belief no longer describes reality?
+This repository contains a controlled benchmark for studying belief revision under structural change. An agent observes a synthetic market signal, maintains a structured belief about whether that signal remains useful, and updates that belief as predictions resolve over time.
 
+The benchmark separates the agent-visible observation stream from hidden environmental state. This permits causal evaluation of belief trajectories without revealing the regime labels used as ground truth. The current research artifact is the **Minimum Valid Demo v1**, a frozen 451-timestep comparison using real DeepSeek and Codex model executions.
 
-An open benchmark studying how AI systems revise beliefs when previously successful assumptions encounter structural changes.
+## Core research question
 
+When a previously useful predictive relationship encounters accumulating contradictory evidence, when should an AI system maintain, qualify, or invalidate its belief?
 
-## Research Question
+The benchmark represents the answer at each timestep with three states:
 
+- `VALID`: observable evidence continues to support the belief;
+- `UNCERTAIN`: evidence is insufficient, mixed, or near a validity boundary;
+- `INVALID`: observable evidence supports abandoning the belief.
 
-When reality repeatedly contradicts a previously useful belief, how should an AI system determine whether to maintain, reduce confidence in, or revise that belief?
+The object of analysis is the complete sequential belief trajectory, not a single response or a conventional prediction-accuracy score.
 
+## Why belief revision matters
 
-The benchmark studies whether intelligence requires not only learning patterns, but also understanding the conditions under which those patterns remain valid.
+Predictive relationships can stop generalizing when their underlying environment changes. A system that never revises may persist with an invalid assumption, while a system that revises too readily may react to temporary noise. A third behavior is instability: a system may detect invalidation but repeatedly reverse its decision.
 
+The benchmark isolates these behaviors so they can be measured separately. It examines when revision occurs, how long an obsolete belief persists, whether uncertainty appears before structural invalidation, and whether revised beliefs remain stable. These measurements characterize behavior within this protocol; they are not claims about general model intelligence.
 
-## Benchmark Framework
+## Benchmark architecture
 
+The implementation is divided into independent layers:
 
-The benchmark is model-independent.
+1. **Synthetic environment** — generates observable market variables and hidden regime labels under a predefined structural schedule.
+2. **Observation builder** — exposes only causally available fields and excludes hidden regime variables and future outcomes.
+3. **Universal LLM adapter** — assembles the current observation, previous belief, recent resolved evidence, and deterministic historical summary for every provider.
+4. **Provider boundary** — maps the common runtime context to provider-specific execution through `DeepSeekProvider` or `CodexCLIProvider`.
+5. **Belief interface** — enforces the shared belief-state schema and benchmark-owned timestamps.
+6. **Evaluation engine** — compares the resulting trajectory with hidden environment state after inference.
+7. **Analysis layer** — reports state distributions, transition dynamics, episode stability, confidence behavior, and the frozen evaluation metrics.
 
+Each provider receives the same benchmark observation sequence and uses the same adapter, belief schema, and evaluator. Previous beliefs and resolved evidence are propagated sequentially; timesteps are not evaluated as independent prompts.
 
-It evaluates AI systems through a standardized belief interface rather than a specific model architecture.
+## Minimum Valid Demo setup
 
+Minimum Valid Demo v1 freezes the following protocol:
 
-Current components include:
+| Property | Value |
+| --- | --- |
+| Benchmark window | Day 950 through Day 1400, inclusive |
+| Timesteps | 451 |
+| First timestamp | 2003-08-25 |
+| Last timestamp | 2005-05-16 |
+| Execution | Continuous and sequential |
+| Providers | DeepSeek and Codex CLI |
+| Trajectory schema | timestamp, belief status, confidence, explanation, evidence summary |
 
+The demo reports the existing definitions of:
 
-- Synthetic Environment for controlled structural changes;
+- **Adaptation Delay** — the first `INVALID` belief index relative to the hidden transition into the `INVALID` regime. If no `INVALID` belief occurs before the demo ends, the result is reported as `right-censored` rather than converted to a numerical score.
+- **False Persistence** — persistence of `VALID` beliefs after the environment enters the `INVALID` regime, as implemented by the existing evaluator.
+- **Belief Boundary Awareness** — how early the first pre-invalidation `UNCERTAIN` belief occurs relative to structural invalidation.
 
-- Observation Builder for information boundary control;
+False Abandonment is not reported for Minimum Valid Demo v1. The evaluator definitions are not altered for the demo.
 
-- Belief Agent for belief maintenance and revision;
+The runner checkpoints every successful timestep to `results/demo_<provider>_trajectory_partial.json`. A resumed run validates and locally replays the saved prefix to reconstruct the same belief and evidence state, then calls the provider only for missing timesteps. Completed trajectories are written to `results/demo_<provider>_trajectory.json`. Generated results are excluded from Git tracking.
 
-- Evaluation Engine for measuring adaptive behavior.
+## Real model experiments
 
+### DeepSeek
 
-Future experiments can integrate:
+The DeepSeek experiment uses `DeepSeekProvider` and the repository's configured DeepSeek chat-completions model. Authentication is read from `DEEPSEEK_API_KEY`; credential values are not serialized into trajectories.
 
+The completed trajectory contains 451 belief states. Its detailed analysis is available in [reports/deepseek_demo_analysis.md](reports/deepseek_demo_analysis.md).
 
-- large language models;
+### Codex
 
-- reasoning agents;
+The Codex experiment uses `CodexCLIProvider`, an ephemeral and schema-constrained `codex exec` invocation for each timestep. It uses CLI-owned authentication and an isolated read-only working directory. The completed trajectory contains 451 belief states.
 
-- reinforcement learning systems;
+The provider timeout is 300 seconds to accommodate CLI transport and process-finalization latency observed during the run. Its detailed analysis is available in [reports/codex_demo_analysis.md](reports/codex_demo_analysis.md).
 
-- other adaptive intelligence systems.
+## Behavioral findings
 
+The completed trajectories exhibit different belief-revision patterns under the same protocol:
 
-## Status
+| Provider | Adaptation Delay | False Persistence | Belief Boundary Awareness |
+| --- | ---: | ---: | ---: |
+| DeepSeek | -25 | 101 | 350 |
+| Codex | right-censored | 85 | 350 |
 
+DeepSeek entered `INVALID` before the hidden invalidation boundary and later returned to `VALID` multiple times. Its trajectory contains 36 state transitions, including seven `INVALID → VALID` recoveries and 11 direct transitions between `VALID` and `INVALID`. This is an early but oscillatory revision pattern.
 
-Research prototype with a complete benchmark pipeline.
+Codex did not enter `INVALID` during the observed window, so Adaptation Delay is right-censored. Its trajectory contains four state transitions and uses longer `UNCERTAIN` episodes without `VALID ↔ INVALID` reversals. This is a more categorically stable trajectory with persistent `VALID` or `UNCERTAIN` belief through the end of the demo.
 
+Both providers spent more than 93% of the window in `VALID`, and both had lower mean confidence in `UNCERTAIN` than in `VALID`. Confidence ranges nevertheless overlap across states. These findings describe revision timing, stability, and uncertainty management; they do not establish that either provider is generally better.
 
-Implemented:
+The full side-by-side analysis is available in [reports/model_comparison_analysis.md](reports/model_comparison_analysis.md).
 
-- synthetic environment generation;
+## Reproduction instructions
 
-- AI observation boundary control;
+Use Python from the repository root. The existing implementation requires `pandas`; provider executions additionally require their corresponding authenticated client or credential.
 
-- structured belief state interface;
+Run the offline test suite and compile the Python sources:
 
-- baseline adaptive belief agent;
+```bash
+python -m unittest discover -s tests -v
+python -m compileall -q src experiments tests
+```
 
-- evaluation metrics for belief revision.
+Analyze the existing completed trajectories without making model calls:
 
+```bash
+python experiments/analyze_demo_trajectory.py \
+  --input results/demo_deepseek_trajectory.json \
+  --output reports/deepseek_demo_analysis.md \
+  --provider deepseek
 
-Current results demonstrate that the benchmark can measure:
+python experiments/analyze_demo_trajectory.py \
+  --input results/demo_codex_trajectory.json \
+  --output reports/codex_demo_analysis.md \
+  --provider codex
+```
 
-- adaptation delay;
+Run a new frozen demo only when the intended real-model cost and execution time have been reviewed:
 
-- false persistence;
+```bash
+python experiments/run_demo.py --provider deepseek
+python experiments/run_demo.py --provider codex
+```
 
-- false abandonment;
+Resume an interrupted run from its validated partial trajectory:
 
-- belief boundary awareness.
+```bash
+python experiments/run_demo.py --provider deepseek --resume
+python experiments/run_demo.py --provider codex --resume
+```
 
+Do not use `--resume` to combine outputs produced under different model, prompt, provider, data, or protocol configurations.
 
-Future work will extend the benchmark to stronger reasoning agents and the LAI Track.
+## Future directions
 
----
+Future work can extend the artifact while preserving explicit protocol versioning:
 
+- repeat runs to characterize within-provider trajectory variance;
+- pre-register additional environments and structural-change mechanisms;
+- evaluate other providers through the same universal adapter contract;
+- add descriptive stability measures without changing the frozen demo metrics;
+- study longer observation windows and explicitly defined revalidation protocols;
+- analyze calibration and evidence sensitivity at belief-transition boundaries.
 
-## Repository Structure
-
-when-ai-stops-believing/
-
-├── docs/
-
-│ ├── project_architecture.md
-
-│ ├── benchmark_protocol.md
-
-│ ├── observation_builder_design.md
-
-│ ├── belief_state_design.md
-
-│ ├── evaluation_engine_design.md
-
-│ └── baseline_experiment_report.md
-
-├── src/
-
-│ ├── market_generator.py
-
-│ ├── observation_builder.py
-
-│ ├── belief_interface.py
-
-│ ├── belief_memory.py
-
-│ ├── baseline_belief_agent.py
-
-│ └── evaluation_engine.py
-
-└── data/
-
-    └── synthetic_market.csv
-
-
-
-Each module represents an independent layer of the benchmark pipeline.
+Any extension should keep hidden-state evaluation separate from agent-visible inputs and should report censoring explicitly when adaptation is not observed.
