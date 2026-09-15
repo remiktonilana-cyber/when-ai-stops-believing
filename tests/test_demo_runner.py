@@ -5,10 +5,13 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import pandas as pd
 
-from experiments.run_demo import DemoRunError, END_DAY, START_DAY, run_demo
+from experiments.run_demo import (
+    DemoRunError, END_DAY, START_DAY, create_provider, parse_args, run_demo,
+)
 from src.belief_interface import validate_belief_state
 from src.evaluation_engine import load_belief_history
 
@@ -38,6 +41,34 @@ class DeterministicFakeProvider:
 
 
 class DemoRunnerTests(unittest.TestCase):
+    def test_cli_accepts_supported_providers(self):
+        for name in ("codex", "deepseek", "qwen"):
+            with self.subTest(provider=name):
+                self.assertEqual(parse_args(["--provider", name]).provider, name)
+
+    def test_provider_selection(self):
+        with patch("experiments.run_demo.CodexCLIProvider") as codex, \
+                patch("experiments.run_demo.DeepSeekProvider") as deepseek, \
+                patch("experiments.run_demo.QwenProvider") as qwen:
+            providers = {"codex": codex, "deepseek": deepseek, "qwen": qwen}
+            for name, constructor in providers.items():
+                with self.subTest(provider=name):
+                    for candidate in providers.values():
+                        candidate.reset_mock()
+                    self.assertIs(create_provider(name), constructor.return_value)
+                    constructor.assert_called_once_with()
+                    for other_name, candidate in providers.items():
+                        if other_name != name:
+                            candidate.assert_not_called()
+
+    def test_unsupported_provider_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported provider: unknown"):
+            create_provider("unknown")
+        with patch("sys.stderr"):
+            with self.assertRaises(SystemExit) as raised:
+                parse_args(["--provider", "unknown"])
+        self.assertEqual(raised.exception.code, 2)
+
     def test_complete_fake_provider_demo(self):
         provider = DeterministicFakeProvider()
         with tempfile.TemporaryDirectory() as directory:

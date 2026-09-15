@@ -20,6 +20,7 @@ from src.evaluation_engine import (
     calculate_false_persistence,
 )
 from src.observation_builder import build_observation_sequence
+from src.qwen_provider import QwenProvider
 from src.universal_llm_adapter import run_llm_agent, validate_model_output
 
 
@@ -51,6 +52,7 @@ def create_provider(provider_name):
     providers = {
         "codex": CodexCLIProvider,
         "deepseek": DeepSeekProvider,
+        "qwen": QwenProvider,
     }
     try:
         return providers[provider_name]()
@@ -214,7 +216,7 @@ def run_demo(
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--provider", required=True, choices=("codex", "deepseek"))
+    parser.add_argument("--provider", required=True, choices=("codex", "deepseek", "qwen"))
     parser.add_argument("--market", type=Path, default=DEFAULT_MARKET_PATH)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--resume", action="store_true")
