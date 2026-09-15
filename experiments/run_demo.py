@@ -3,7 +3,9 @@
 import argparse
 import json
 import sys
+import traceback
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pandas as pd
 
@@ -125,6 +127,53 @@ def load_partial_trajectory(partial_path, observations):
     return trajectory
 
 
+def failure_diagnostics(error, provider_name, timestep, timestamp):
+    """Capture the exception chain and available metadata, without request headers."""
+    diagnostics = {
+        "provider": provider_name,
+        "timestep": timestep,
+        "timestamp": timestamp,
+        "exception_class": type(error).__name__,
+        "exception_message": str(error),
+        "traceback": "".join(traceback.format_exception(type(error), error, error.__traceback__)),
+        "http_status": None,
+        "finish_reason": None,
+        "token_usage": None,
+        "exception_chain": [],
+    }
+    seen = set()
+    current = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        diagnostics["exception_chain"].append({
+            "exception_class": type(current).__name__, "message": str(current),
+        })
+        metadata = {
+            "http_status": vars(current).get("http_status"),
+            "finish_reason": vars(current).get("finish_reason"),
+            "token_usage": vars(current).get("token_usage"),
+        }
+        if isinstance(current, HTTPError):
+            metadata["http_status"] = current.code
+        response = vars(current).get("response")
+        if isinstance(response, dict):
+            metadata["token_usage"] = metadata["token_usage"] or response.get("usage")
+            choices = response.get("choices")
+            if isinstance(choices, list) and choices and isinstance(choices[0], dict):
+                metadata["finish_reason"] = metadata["finish_reason"] or choices[0].get("finish_reason")
+        for key, value in metadata.items():
+            if diagnostics[key] is None and value is not None:
+                try:
+                    json.dumps(value, allow_nan=False)
+                except (TypeError, ValueError):
+                    continue
+                diagnostics[key] = value
+        current = current.__cause__ or (
+            None if current.__suppress_context__ else current.__context__
+        )
+    return diagnostics
+
+
 class DemoRunError(RuntimeError):
     """Report a failed demo while retaining its completed checkpoint."""
 
@@ -132,6 +181,8 @@ class DemoRunError(RuntimeError):
         self.failed_timestep = failed_timestep
         self.completed_timesteps = completed_timesteps
         self.partial_output_path = str(partial_output_path)
+        self.diagnostics_path = None
+        self.diagnostics_write_error = None
         super().__init__(
             f"Demo failed at Day {failed_timestep}; "
             f"completed timesteps: {completed_timesteps}; "
@@ -143,6 +194,8 @@ class DemoRunError(RuntimeError):
             "failed_timestep": self.failed_timestep,
             "completed_timestep_count": self.completed_timesteps,
             "partial_output_path": self.partial_output_path,
+            "diagnostics_path": self.diagnostics_path,
+            "diagnostics_write_error": self.diagnostics_write_error,
         }
 
 
@@ -200,6 +253,21 @@ def run_demo(
             completed_timesteps=completed_timesteps,
             partial_output_path=partial_destination,
         )
+        diagnostics_path = partial_destination.with_name(
+            f"{partial_destination.stem}_failure.json"
+        )
+        try:
+            diagnostics = failure_diagnostics(
+                error, provider_name, failure.failed_timestep,
+                observations[completed_timesteps]["timestamp"],
+            )
+            save_trajectory(diagnostics, diagnostics_path)
+            failure.diagnostics_path = str(diagnostics_path)
+        except Exception as diagnostics_error:
+            # A diagnostics filesystem failure must not replace the original cause.
+            failure.diagnostics_write_error = (
+                f"{type(diagnostics_error).__name__}: {diagnostics_error}"
+            )
         raise failure from error
 
     save_trajectory(trajectory, destination)

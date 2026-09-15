@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 import pandas as pd
 
@@ -41,6 +42,37 @@ class DeterministicFakeProvider:
 
 
 class DemoRunnerTests(unittest.TestCase):
+    def test_failure_diagnostics_capture_chained_http_metadata(self):
+        def failing_provider(context):
+            try:
+                raise HTTPError("https://example.invalid", 503, "Unavailable", {}, None)
+            except HTTPError as cause:
+                error = RuntimeError("provider failed")
+                error.response = {
+                    "choices": [{"finish_reason": "length"}],
+                    "usage": {"completion_tokens": 1000},
+                }
+                raise error from cause
+
+        with tempfile.TemporaryDirectory() as directory:
+            partial = Path(directory) / "partial.json"
+            with self.assertRaises(DemoRunError) as raised:
+                run_demo("qwen", provider=failing_provider, partial_output_path=partial)
+            failure = raised.exception
+            diagnostic = json.loads(Path(failure.diagnostics_path).read_text())
+            self.assertEqual(json.loads(partial.read_text()), [])
+            self.assertEqual(Path(failure.diagnostics_path).parent, partial.parent)
+            self.assertEqual(diagnostic["provider"], "qwen")
+            self.assertEqual(diagnostic["timestep"], START_DAY)
+            self.assertEqual(diagnostic["http_status"], 503)
+            self.assertEqual(diagnostic["finish_reason"], "length")
+            self.assertEqual(diagnostic["token_usage"], {"completion_tokens": 1000})
+            self.assertEqual(diagnostic["exception_class"], "RuntimeError")
+            self.assertIn("HTTPError", diagnostic["traceback"])
+            self.assertIn("RuntimeError: provider failed", diagnostic["traceback"])
+            self.assertIsInstance(failure.__cause__.__cause__, HTTPError)
+            self.assertEqual(failure.as_dict()["diagnostics_path"], failure.diagnostics_path)
+
     def test_cli_accepts_supported_providers(self):
         for name in ("codex", "deepseek", "qwen"):
             with self.subTest(provider=name):
@@ -166,6 +198,17 @@ class DemoRunnerTests(unittest.TestCase):
             self.assertEqual(failure.partial_output_path, str(partial_path))
             self.assertEqual(len(checkpoint), 12)
             self.assertFalse(output_path.exists())
+            diagnostic = json.loads(Path(failure.diagnostics_path).read_text())
+            self.assertEqual(diagnostic["exception_class"], "RuntimeError")
+            self.assertIn("deterministic failure", diagnostic["traceback"])
+            self.assertEqual(diagnostic["timestep"], START_DAY + 12)
+            self.assertEqual(
+                diagnostic["timestamp"],
+                pd.read_csv("data/synthetic_market.csv").iloc[START_DAY + 12]["date"],
+            )
+            self.assertIsNone(diagnostic["http_status"])
+            self.assertIsNone(diagnostic["finish_reason"])
+            self.assertIsNone(diagnostic["token_usage"])
 
             resume_provider = ResumeProvider()
             report = run_demo(
