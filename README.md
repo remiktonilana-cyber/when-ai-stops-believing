@@ -4,7 +4,9 @@
 
 This repository contains a controlled benchmark for studying belief revision under structural change. An agent observes a synthetic market signal, maintains a structured belief about whether that signal remains useful, and updates that belief as predictions resolve over time.
 
-The benchmark separates the agent-visible observation stream from hidden environmental state. This permits causal evaluation of belief trajectories without revealing the regime labels used as ground truth. The current research artifact is the **Minimum Valid Demo v1**, a frozen 451-timestep comparison using real DeepSeek and Codex model executions.
+The benchmark separates the agent-visible observation stream from hidden environmental state. This permits causal evaluation of belief trajectories without revealing the regime labels used as ground truth. The **Minimum Valid LLM Belief Revision Demo v1 is complete**: DeepSeek, Codex, and Qwen each produced a 451-timestep trajectory under the frozen benchmark protocol. Individual analysis reports and a three-model comparison are available.
+
+This comparison evaluates belief revision behavior under the benchmark, not general intelligence.
 
 ## Core research question
 
@@ -31,16 +33,16 @@ The implementation is divided into independent layers:
 1. **Synthetic environment** — generates observable market variables and hidden regime labels under a predefined structural schedule.
 2. **Observation builder** — exposes only causally available fields and excludes hidden regime variables and future outcomes.
 3. **Universal LLM adapter** — assembles the current observation, previous belief, recent resolved evidence, and deterministic historical summary for every provider.
-4. **Provider boundary** — maps the common runtime context to provider-specific execution through `DeepSeekProvider` or `CodexCLIProvider`.
+4. **Provider boundary** — maps the common runtime context to provider-specific execution through `DeepSeekProvider`, `CodexCLIProvider`, or `QwenProvider`.
 5. **Belief interface** — enforces the shared belief-state schema and benchmark-owned timestamps.
 6. **Evaluation engine** — compares the resulting trajectory with hidden environment state after inference.
 7. **Analysis layer** — reports state distributions, transition dynamics, episode stability, confidence behavior, and the frozen evaluation metrics.
 
 Each provider receives the same benchmark observation sequence and uses the same adapter, belief schema, and evaluator. Previous beliefs and resolved evidence are propagated sequentially; timesteps are not evaluated as independent prompts.
 
-## Minimum Valid Demo setup
+## Minimum Valid LLM Belief Revision Demo v1 completion
 
-Minimum Valid Demo v1 freezes the following protocol:
+The completed Minimum Valid LLM Belief Revision Demo v1 uses the following frozen protocol:
 
 | Property | Value |
 | --- | --- |
@@ -49,7 +51,7 @@ Minimum Valid Demo v1 freezes the following protocol:
 | First timestamp | 2003-08-25 |
 | Last timestamp | 2005-05-16 |
 | Execution | Continuous and sequential |
-| Providers | DeepSeek and Codex CLI |
+| Supported providers | DeepSeek, Codex CLI, and Qwen |
 | Trajectory schema | timestamp, belief status, confidence, explanation, evidence summary |
 
 The demo reports the existing definitions of:
@@ -76,6 +78,20 @@ The Codex experiment uses `CodexCLIProvider`, an ephemeral and schema-constraine
 
 The provider timeout is 300 seconds to accommodate CLI transport and process-finalization latency observed during the run. Its detailed analysis is available in [reports/codex_demo_analysis.md](reports/codex_demo_analysis.md).
 
+### Qwen
+
+The Qwen experiment uses `QwenProvider` with `qwen-plus` and authentication from `DASHSCOPE_API_KEY`. The default DashScope base URL is the China mainland endpoint; `DASHSCOPE_BASE_URL` supports an international endpoint override. Its completed trajectory contains 451 belief states, with detailed analysis in [reports/qwen_demo_analysis.md](reports/qwen_demo_analysis.md).
+
+### Generated trajectories
+
+| Provider | Completed trajectory | Analysis report |
+| --- | --- | --- |
+| DeepSeek | [demo_deepseek_trajectory.json](results/demo_deepseek_trajectory.json) | [DeepSeek analysis](reports/deepseek_demo_analysis.md) |
+| Codex | [demo_codex_trajectory.json](results/demo_codex_trajectory.json) | [Codex analysis](reports/codex_demo_analysis.md) |
+| Qwen | [demo_qwen_trajectory.json](results/demo_qwen_trajectory.json) | [Qwen analysis](reports/qwen_demo_analysis.md) |
+
+The trajectory files are generated local artifacts and are excluded from Git tracking; these links require the corresponding results to be present locally.
+
 ## Behavioral findings
 
 The completed trajectories exhibit different belief-revision patterns under the same protocol:
@@ -84,14 +100,17 @@ The completed trajectories exhibit different belief-revision patterns under the 
 | --- | ---: | ---: | ---: |
 | DeepSeek | -25 | 101 | 350 |
 | Codex | right-censored | 85 | 350 |
+| Qwen | 50 | 49 | 350 |
 
 DeepSeek entered `INVALID` before the hidden invalidation boundary and later returned to `VALID` multiple times. Its trajectory contains 36 state transitions, including seven `INVALID → VALID` recoveries and 11 direct transitions between `VALID` and `INVALID`. This is an early but oscillatory revision pattern.
 
 Codex did not enter `INVALID` during the observed window, so Adaptation Delay is right-censored. Its trajectory contains four state transitions and uses longer `UNCERTAIN` episodes without `VALID ↔ INVALID` reversals. This is a more categorically stable trajectory with persistent `VALID` or `UNCERTAIN` belief through the end of the demo.
 
-Both providers spent more than 93% of the window in `VALID`, and both had lower mean confidence in `UNCERTAIN` than in `VALID`. Confidence ranges nevertheless overlap across states. These findings describe revision timing, stability, and uncertainty management; they do not establish that either provider is generally better.
+Qwen entered `INVALID` after a delay of 50 timesteps and remained there for the final 51 timesteps, with seven transitions and no `INVALID → VALID` recovery. This is delayed but stable invalidation within the observed window.
 
-The full side-by-side analysis is available in [reports/model_comparison_analysis.md](reports/model_comparison_analysis.md).
+Together, the reports show three patterns: DeepSeek revises early but unstably; Codex persists stably without observed invalidation; Qwen invalidates later and sustains that decision. All three have lower mean confidence in `UNCERTAIN` than in `VALID`. These findings describe revision timing, stability, and uncertainty management, not a ranking of general intelligence.
+
+The completed three-model comparison, including metrics, state distributions, transition dynamics, and confidence behavior, is available in [reports/model_comparison_analysis.md](reports/model_comparison_analysis.md).
 
 ## Reproduction instructions
 
@@ -116,6 +135,8 @@ python experiments/analyze_demo_trajectory.py \
   --input results/demo_codex_trajectory.json \
   --output reports/codex_demo_analysis.md \
   --provider codex
+
+python experiments/analyze_demo_trajectory.py --provider qwen
 ```
 
 Run a new frozen demo only when the intended real-model cost and execution time have been reviewed:
@@ -123,6 +144,7 @@ Run a new frozen demo only when the intended real-model cost and execution time 
 ```bash
 python experiments/run_demo.py --provider deepseek
 python experiments/run_demo.py --provider codex
+python experiments/run_demo.py --provider qwen
 ```
 
 Resume an interrupted run from its validated partial trajectory:
@@ -130,6 +152,7 @@ Resume an interrupted run from its validated partial trajectory:
 ```bash
 python experiments/run_demo.py --provider deepseek --resume
 python experiments/run_demo.py --provider codex --resume
+python experiments/run_demo.py --provider qwen --resume
 ```
 
 Do not use `--resume` to combine outputs produced under different model, prompt, provider, data, or protocol configurations.
