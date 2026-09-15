@@ -239,11 +239,16 @@ def render_markdown(analysis):
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH)
+    parser.add_argument("--input", type=Path)
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--market", type=Path, default=DEFAULT_MARKET_PATH)
-    parser.add_argument("--provider", default="deepseek")
-    return parser.parse_args(argv)
+    parser.add_argument("--provider", default="deepseek", choices=("deepseek", "codex", "qwen"))
+    args = parser.parse_args(argv)
+    if args.input is None:
+        args.input = REPOSITORY_ROOT / "results" / f"demo_{args.provider}_trajectory.json"
+    if args.output is None:
+        args.output = REPOSITORY_ROOT / "reports" / f"{args.provider}_demo_analysis.md"
+    return args
 
 
 def main(argv=None):
