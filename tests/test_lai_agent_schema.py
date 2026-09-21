@@ -45,12 +45,20 @@ class AgentBeliefTests(unittest.TestCase):
         )
         self.assertEqual(len(valid.evidence_summary["supporting_evidence"]), MAX_EVIDENCE_ITEMS)
 
-        with self.assertRaisesRegex(ValueError, "50"):
+        with self.assertRaisesRegex(ValueError, "3"):
             AgentBelief(
                 BeliefStatus.VALID,
                 0.5,
                 "explanation",
                 evidence(["support"] * (MAX_EVIDENCE_ITEMS + 1)),
+            )
+
+        with self.assertRaisesRegex(ValueError, "3"):
+            AgentBelief(
+                BeliefStatus.VALID,
+                0.5,
+                "explanation",
+                evidence(contradicting=["contradiction"] * 4),
             )
 
         with self.assertRaises(ValueError):

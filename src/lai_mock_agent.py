@@ -52,7 +52,7 @@ class MockAgent:
             status = BeliefStatus.INVALID
             confidence = 0.9
             explanation = "Resolved contradiction evidence exceeds the mock rule."
-            contradicting = ["resolved shock-response deviation"] * contradiction_count
+            contradicting = ["resolved shock-response deviation"] * min(contradiction_count, 3)
             supporting = []
         elif stress >= WARNING_STRESS_THRESHOLD:
             status = BeliefStatus.UNCERTAIN
@@ -84,4 +84,3 @@ def _resolved_pair(pair):
     if isinstance(pair, Sequence) and not isinstance(pair, (str, bytes)) and len(pair) == 2:
         return float(pair[0]), float(pair[1])
     raise ValueError("resolved evidence must contain (shock, response) pairs")
-

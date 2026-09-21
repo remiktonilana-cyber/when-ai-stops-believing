@@ -23,7 +23,7 @@ The previous belief contains:
 - `evidence_summary`
 
 Resolved history contains the latest resolved `(shock, response)` pairs, in
-causal order. At most 50 pairs are supplied. A response is included only after
+causal order, oldest to newest. At most 50 pairs are supplied. A response is included only after
 the corresponding shock-response pair has resolved.
 
 The historical summary contains:
@@ -32,8 +32,19 @@ The historical summary contains:
 - `lifetime_shock_response_slope`
 - `lifetime_residual_rmse`
 
-`context_signal` is an Agent-visible context feature defined by the future
-observation adapter; this document does not assign it hidden-state semantics.
+`context_signal` is the neutral Agent-visible name for the internal nuisance
+channel; this document does not assign it hidden-state semantics.
+
+At initialization, the Agent receives a historical summary calculated only from
+resolved history available through Day 349 and the latest maximum 50 resolved
+pairs. It receives no future or hidden information. The resulting initialization
+belief is later copied identically into the transition and matched control
+worlds. No retry-until-VALID behavior is implied.
+
+At runtime, the previous belief includes only `belief_status`, `confidence`, and
+`evidence_summary`. The previous explanation is not supplied at the next
+timestep. The current response is unresolved and is excluded from current input;
+only pairs with i < t may appear in resolved history.
 
 ## Forbidden information
 
@@ -60,3 +71,4 @@ The schema-only representation in `src/lai_agent_schema.py` uses the statuses
 `VALID`, `UNCERTAIN`, and `INVALID`, a confidence in `[0, 1]`, an explanation,
 and a bounded supporting/contradicting evidence summary. This module performs
 validation only; it does not choose a status, revise a belief, or call a model.
+Each evidence list independently contains at most three items.

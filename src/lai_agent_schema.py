@@ -11,7 +11,7 @@ from numbers import Real
 from typing import Any, Mapping
 
 
-MAX_EVIDENCE_ITEMS = 50
+MAX_EVIDENCE_ITEMS = 3
 
 
 class BeliefStatus(str, Enum):
@@ -57,8 +57,8 @@ class AgentBelief:
         lists = [self.evidence_summary[name] for name in expected]
         if any(not isinstance(items, list) for items in lists):
             raise ValueError("evidence entries must be lists")
-        if sum(len(items) for items in lists) > MAX_EVIDENCE_ITEMS:
-            raise ValueError(
-                f"evidence_summary cannot contain more than {MAX_EVIDENCE_ITEMS} items"
-            )
-
+        for name, items in zip(expected, lists):
+            if len(items) > MAX_EVIDENCE_ITEMS:
+                raise ValueError(
+                    f"{name} cannot contain more than {MAX_EVIDENCE_ITEMS} items"
+                )
