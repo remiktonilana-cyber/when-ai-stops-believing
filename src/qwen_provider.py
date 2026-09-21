@@ -86,6 +86,7 @@ class QwenProvider:
         model=DEFAULT_MODEL,
         timeout=60,
         transport=None,
+        prompt_builder=None,
     ):
         self.api_key = api_key or os.environ.get("DASHSCOPE_API_KEY")
         if not self.api_key:
@@ -93,14 +94,19 @@ class QwenProvider:
         self.model = model
         self.timeout = timeout
         self.transport = transport or _http_transport
+        self.prompt_builder = prompt_builder
         self.last_response_model = None
 
     def __call__(self, context):
         system_prompt = (
-            f"{SYSTEM_INSTRUCTIONS}\n\n"
-            "Return a JSON object matching this exact shape and do not add fields:\n"
-            f"{json.dumps(OUTPUT_EXAMPLE, separators=(',', ':'))}\n\n"
-            f"{CONCISE_OUTPUT_INSTRUCTIONS}"
+            self.prompt_builder(context)
+            if self.prompt_builder is not None
+            else (
+                f"{SYSTEM_INSTRUCTIONS}\n\n"
+                "Return a JSON object matching this exact shape and do not add fields:\n"
+                f"{json.dumps(OUTPUT_EXAMPLE, separators=(',', ':'))}\n\n"
+                f"{CONCISE_OUTPUT_INSTRUCTIONS}"
+            )
         )
         payload = {
             "model": self.model,
