@@ -5,6 +5,7 @@ import os
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from src.lai_output_diagnostics import output_diagnostics
 from src.llm_prompt import SYSTEM_INSTRUCTIONS, serialize_runtime_context
 
 
@@ -78,12 +79,14 @@ class DeepSeekProvider:
         self.transport = transport or _http_transport
         self.prompt_builder = prompt_builder
         self.last_response_model = None
+        self.last_response_diagnostics = None
 
     def __call__(self, context):
         # Request metadata is scoped to this invocation.  In particular, a
         # transport failure must not leave the previous response model attached
         # to the failed request's provenance.
         self.last_response_model = None
+        self.last_response_diagnostics = None
         system_prompt = (
             self.prompt_builder(context)
             if self.prompt_builder is not None
@@ -108,10 +111,14 @@ class DeepSeekProvider:
         response = self.transport(payload, self.api_key, self.timeout)
         if isinstance(response, dict) and isinstance(response.get("model"), str):
             self.last_response_model = response["model"]
+        self.last_response_diagnostics = output_diagnostics(category="response_envelope")
         try:
-            model_output = json.loads(_extract_message_content(response))
+            content = _extract_message_content(response)
+            model_output = json.loads(content)
         except json.JSONDecodeError as error:
+            self.last_response_diagnostics = output_diagnostics(parsed=False, category="invalid_json")
             raise ValueError("DeepSeek structured output was not valid JSON") from error
+        self.last_response_diagnostics = output_diagnostics(model_output, parsed=True)
         if not isinstance(model_output, dict):
             raise ValueError("DeepSeek structured output must be an object")
         return model_output

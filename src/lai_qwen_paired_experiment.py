@@ -14,6 +14,7 @@ from functools import wraps
 from pathlib import Path
 
 from src.lai_agent_contract import build_initialization_input, build_runtime_input, build_neutral_prompt
+from src.lai_output_diagnostics import safe_diagnostics
 from src.lai_agent_schema import AgentBelief, BeliefStatus
 from src.lai_agent_trajectory import AgentTrajectory
 from src.lai_belief_metrics import compute_belief_metrics
@@ -127,13 +128,13 @@ def _checkpoint_belief(record, identity):
                     "explanation": record["explanation"], "evidence_summary": record["evidence_summary"]})
 
 
-def _failure(directory, stage, timestep, error, audit):
+def _failure(directory, stage, timestep, error, audit, provider=None):
     # Only fixed categories and numeric counters; no exception/provider text.
     _write_json(Path(directory) / "failure.json", {
         "stage": stage, "timestep": timestep,
         "error_category": "validation" if isinstance(error, ValueError) else "provider_failure",
         "technical_retry_count": len(audit.get("technical_retries", [])),
-        "provider_diagnostics": None,
+        "provider_diagnostics": safe_diagnostics(getattr(provider, "last_response_diagnostics", None)),
     })
 
 
@@ -147,7 +148,7 @@ def _call_and_checkpoint(provider, agent_input, directory, stage, timestep, pers
     try:
         belief = _invoke_validated(provider, agent_input, audit)
     except Exception as error:
-        _failure(directory, stage, timestep, error, audit)
+        _failure(directory, stage, timestep, error, audit, provider)
         pending.unlink()
         raise
     finally:
