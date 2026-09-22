@@ -2,14 +2,19 @@
 
 import json
 import os
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
 import pandas as pd
 
 from src.deepseek_provider import DEFAULT_MODEL, DeepSeekProvider
+from src.lai_agent_contract import build_neutral_prompt
+from src.lai_qwen_paired_experiment import run_paired_experiment
+from src.lai_transition_environment import generate_transition
+from src.lai_transition_reference import D_PLUS
 from src.observation_builder import build_observation_sequence
-from src.universal_llm_adapter import run_llm_agent
+from src.universal_llm_adapter import run_llm_agent, validate_model_output
 
 
 MODEL_OUTPUT = {
@@ -34,6 +39,19 @@ class RecordingTransport:
             "model": DEFAULT_MODEL,
             "choices": [{"message": {"role": "assistant", "content": self.content}}],
         }
+
+
+class SequenceTransport:
+    def __init__(self, responses):
+        self.responses = iter(responses)
+        self.payloads = []
+
+    def __call__(self, payload, api_key, timeout):
+        self.payloads.append(payload)
+        response = next(self.responses)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class DeepSeekProviderTests(unittest.TestCase):
@@ -65,6 +83,89 @@ class DeepSeekProviderTests(unittest.TestCase):
         self.assertFalse(payload["stream"])
         self.assertEqual(json.loads(payload["messages"][1]["content"]), context)
         self.assertEqual(provider.last_response_model, DEFAULT_MODEL)
+
+    def test_lai_prompt_builder_uses_frozen_prompt_and_legacy_path_is_separate(self):
+        transport = RecordingTransport()
+        context = {"resolved_history": [], "historical_summary": {"resolved_count": 0}}
+        provider = DeepSeekProvider(
+            api_key="test-key-not-real",
+            transport=transport,
+            prompt_builder=build_neutral_prompt,
+        )
+
+        provider(context)
+        payload = transport.payloads[0]
+        system_prompt = payload["messages"][0]["content"]
+        self.assertEqual(system_prompt, build_neutral_prompt(context))
+        self.assertIn(
+            "previously established shock-response relationship remains a reliable description",
+            system_prompt,
+        )
+        self.assertNotIn("market signal remains useful", system_prompt)
+        self.assertEqual(payload["response_format"], {"type": "json_object"})
+
+    def test_lai_output_still_requires_provider_independent_strict_validation(self):
+        malformed = dict(MODEL_OUTPUT)
+        malformed["evidence_summary"] = {
+            "supporting_evidence": [],
+            "unexpected": [],
+        }
+        provider = DeepSeekProvider(
+            api_key="test-key-not-real",
+            transport=RecordingTransport(json.dumps(malformed)),
+            prompt_builder=build_neutral_prompt,
+        )
+        with self.assertRaisesRegex(ValueError, "evidence_summary fields"):
+            validate_model_output(provider({}))
+
+    def test_pre_response_failure_clears_previous_response_metadata(self):
+        success = {
+            "model": DEFAULT_MODEL,
+            "choices": [{"message": {"content": json.dumps(MODEL_OUTPUT)}}],
+        }
+        transport = SequenceTransport([success, RuntimeError("transport failure")])
+        provider = DeepSeekProvider(api_key="test-key-not-real", transport=transport)
+        provider({})
+        self.assertEqual(provider.last_response_model, DEFAULT_MODEL)
+        with self.assertRaisesRegex(RuntimeError, "transport failure"):
+            provider({})
+        self.assertIsNone(provider.last_response_model)
+
+    def test_lai_provider_hook_runs_causal_paired_runner_with_fake_transport(self):
+        transport = RecordingTransport()
+        provider = DeepSeekProvider(
+            api_key="test-key-not-real",
+            transport=transport,
+            prompt_builder=build_neutral_prompt,
+        )
+        transition = generate_transition(1000, D_PLUS)
+        control = generate_transition(1000, D_PLUS, control=True)
+        with TemporaryDirectory() as directory:
+            result = run_paired_experiment(
+                provider,
+                transition_world=transition,
+                control_world=control,
+                artifact_dir=directory,
+                start=350,
+                end=351,
+                provider_name="deepseek",
+                model=DEFAULT_MODEL,
+            )
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(len(transport.payloads), 5)  # init + two steps per world
+        user_inputs = [json.loads(item["messages"][1]["content"]) for item in transport.payloads]
+        self.assertEqual(user_inputs[0]["historical_summary"]["resolved_count"], 349)
+        self.assertNotIn("next_response", user_inputs[1]["current_observation"])
+        self.assertEqual(
+            tuple(user_inputs[2]["resolved_history"][-1]),
+            (float(transition.iloc[350]["shock"]), float(transition.iloc[350]["next_response"])),
+        )
+        self.assertEqual(user_inputs[1]["previous_belief"], user_inputs[3]["previous_belief"])
+        self.assertNotIn("explanation", user_inputs[1]["previous_belief"])
+        self.assertEqual(
+            transport.payloads[1]["messages"][0]["content"],
+            transport.payloads[3]["messages"][0]["content"],
+        )
 
     def test_invalid_json_is_rejected(self):
         provider = DeepSeekProvider(
