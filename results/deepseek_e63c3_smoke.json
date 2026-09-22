@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "model": "deepseek-v4-flash",
+  "attempted": 3,
+  "successful": 3,
+  "retries": 0,
+  "failures": 0,
+  "seed": 42,
+  "focused_tests": "18 passed; 2 deselected",
+  "stages": {
+    "initialization": {
+      "input_audit": "PASS",
+      "hidden_leakage": false,
+      "future_leakage": false,
+      "previous_explanation_leakage": false,
+      "history_length": 50,
+      "resolved_count": 349,
+      "validation": "PASS",
+      "parsed": true,
+      "agent_belief": true,
+      "response_model": "deepseek-flash"
+    },
+    "day350": {
+      "input_audit": "PASS",
+      "hidden_leakage": false,
+      "future_leakage": false,
+      "previous_explanation_leakage": false,
+      "history_length": 50,
+      "resolved_count": 350,
+      "validation": "PASS",
+      "parsed": true,
+      "agent_belief": true,
+      "response_model": "deepseek-flash"
+    },
+    "day351": {
+      "input_audit": "PASS",
+      "hidden_leakage": false,
+      "future_leakage": false,
+      "previous_explanation_leakage": false,
+      "history_length": 50,
+      "resolved_count": 351,
+      "validation": "PASS",
+      "parsed": true,
+      "agent_belief": true,
+      "response_model": "deepseek-flash"
+    }
+  },
+  "research_semantic_changes": "NONE",
+  "credential_present": true
+}
