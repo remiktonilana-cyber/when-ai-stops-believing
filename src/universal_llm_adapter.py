@@ -102,6 +102,12 @@ def validate_model_output(model_output):
         raise ValueError("supporting_evidence must be a list")
     if not isinstance(evidence_summary["contradicting_evidence"], list):
         raise ValueError("contradicting_evidence must be a list")
+    for field in EVIDENCE_SUMMARY_FIELDS:
+        values = evidence_summary[field]
+        if len(values) > 3:
+            raise ValueError(f"{field} cannot contain more than 3 items")
+        if any(not isinstance(item, str) for item in values):
+            raise ValueError(f"{field} items must be strings")
 
     return True
 
