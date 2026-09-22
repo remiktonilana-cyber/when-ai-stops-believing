@@ -4,6 +4,9 @@ import pytest
 
 from src.qwen_provider import LAI_AGENT_BELIEF_JSON_SCHEMA, QwenProvider
 from src.universal_llm_adapter import validate_model_output
+from src.lai_qwen_paired_experiment import run_paired_experiment
+from src.lai_transition_environment import generate_transition
+from src.lai_transition_reference import D_PLUS
 
 
 def valid():
@@ -84,3 +87,77 @@ def test_legacy_provider_path_keeps_json_object_response_format():
     provider({})
     assert payloads[0]["response_format"] == {"type": "json_object"}
 
+
+def _completion(output, finish_reason="stop"):
+    return {"model": "qwen-plus", "choices": [{"finish_reason": finish_reason,
+            "message": {"content": json.dumps(output)}}]}
+
+
+def test_success_then_pre_response_failure_clears_diagnostics():
+    calls = []
+
+    def transport(payload, api_key, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return _completion(valid())
+        raise RuntimeError("transport failed before response")
+
+    provider = QwenProvider(api_key="test-key-not-real", transport=transport)
+    provider({})
+    assert provider.last_response_diagnostics["json_parse_success"] is True
+    with pytest.raises(RuntimeError):
+        provider({})
+    assert provider.last_response_diagnostics is None
+
+
+def test_success_then_success_diagnostics_are_current_only():
+    outputs = [valid(), {**valid(), "confidence": .7, "explanation": "second"}]
+
+    def transport(payload, api_key, timeout):
+        return _completion(outputs.pop(0))
+
+    provider = QwenProvider(api_key="test-key-not-real", transport=transport)
+    provider({})
+    first_chars = provider.last_response_diagnostics["response_characters"]
+    provider({})
+    assert provider.last_response_diagnostics["response_characters"] != first_chars
+    assert provider.last_response_diagnostics["top_level_keys"] == sorted(valid())
+
+
+def test_retry_diagnostics_are_scoped_to_one_invocation():
+    calls = []
+
+    def transport(payload, api_key, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return _completion(valid(), finish_reason="length")
+        return _completion(valid())
+
+    provider = QwenProvider(api_key="test-key-not-real", transport=transport)
+    provider({})
+    assert len(calls) == 2
+    assert provider.last_response_diagnostics["finish_reason"] == "stop"
+    assert provider.last_response_diagnostics["truncated"] is False
+
+
+def test_runner_failure_artifact_does_not_inherit_prior_diagnostics(tmp_path):
+    calls = []
+
+    def transport(payload, api_key, timeout):
+        calls.append(payload)
+        if len(calls) == 1:
+            return _completion(valid())
+        raise RuntimeError("pre-response transport failure")
+
+    provider = QwenProvider(api_key="test-key-not-real", transport=transport,
+                            prompt_builder=lambda _: "frozen prompt")
+    transition = generate_transition(1000, D_PLUS)
+    control = generate_transition(1000, D_PLUS, control=True)
+    with pytest.raises(RuntimeError):
+        run_paired_experiment(provider, transition_world=transition,
+                               control_world=control, artifact_dir=tmp_path,
+                               start=350, end=350)
+    failure = json.loads((tmp_path / "failure.json").read_text())
+    assert failure["stage"] == "Transition"
+    assert failure["timestep"] == 350
+    assert failure["provider_diagnostics"] is None

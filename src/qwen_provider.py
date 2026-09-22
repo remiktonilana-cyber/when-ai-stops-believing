@@ -121,6 +121,10 @@ class QwenProvider:
         self.last_response_diagnostics = None
 
     def __call__(self, context):
+        # Diagnostics belong to this logical invocation only.  Clear them
+        # before transport so a pre-response failure cannot expose the prior
+        # request's response metadata through a caller's failure artifact.
+        self.last_response_diagnostics = None
         system_prompt = (
             self.prompt_builder(context)
             if self.prompt_builder is not None
