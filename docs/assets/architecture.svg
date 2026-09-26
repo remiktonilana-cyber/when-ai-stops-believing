@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="900" viewBox="0 0 1100 900" role="img" aria-labelledby="title desc">
+<title id="title">From supplied belief information to permission</title>
+<desc id="desc">Current studied and implemented path: AI or agent, belief and evidence, LAI research and supplied reliability information, reliability adapter plus application context, Decision Gate, GREEN YELLOW RED, and application action. Research evaluation is offline; hidden truth is not a gate input. A future critical transition and early-warning monitor is separately enclosed with a dashed border and has no runtime connection.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#53657b"/></marker></defs>
+<rect width="1100" height="900" fill="#f5f7fb"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#172b43">
+<text x="40" y="45" font-size="26" font-weight="bold">From belief information to permission</text>
+<text x="40" y="75" font-size="16">Research evidence, translation, and authorization have different responsibilities.</text>
+<rect x="30" y="100" width="680" height="755" rx="16" fill="white" stroke="#c8d3e0"/>
+<text x="55" y="133" font-size="17" font-weight="bold">CURRENT IMPLEMENTED / STUDIED PATH</text>
+<text x="55" y="157" font-size="14" fill="#52647b">Conceptual connection; research evaluation is not a runtime gate stage.</text>
+<g stroke="#53657b" stroke-width="2">
+<path d="M275 230 V253"/><path d="M275 313 V336"/><path d="M275 423 V451"/>
+<path d="M275 518 V554"/><path d="M275 620 V656"/><path d="M275 718 V754"/>
+<path d="M505 487 H459"/>
+</g>
+<g fill="#53657b"><path d="M269 245 L275 253 L281 245 Z"/><path d="M269 328 L275 336 L281 328 Z"/><path d="M269 443 L275 451 L281 443 Z"/><path d="M269 546 L275 554 L281 546 Z"/><path d="M269 648 L275 656 L281 648 Z"/><path d="M269 746 L275 754 L281 746 Z"/><path d="M467 481 L459 487 L467 493 Z"/></g>
+<g text-anchor="middle">
+<rect x="85" y="175" width="380" height="55" rx="9" fill="#eaf1fc" stroke="#8caaca"/>
+<text text-anchor="start" x="227.0" y="210" font-size="20" font-weight="bold">AI / Agent</text>
+<rect x="85" y="257" width="380" height="56" rx="9" fill="#eaf1fc" stroke="#8caaca"/>
+<text text-anchor="start" x="193.4" y="292" font-size="20">Belief + Evidence</text>
+<rect x="55" y="340" width="440" height="83" rx="9" fill="#eaf1fc" stroke="#8caaca"/>
+<text text-anchor="start" x="101.7" y="368" font-size="19" font-weight="bold">LAI Research / Reliability Information</text>
+<text text-anchor="start" x="110.4" y="391" font-size="14">Offline studies; runtime information is supplied.</text>
+<text text-anchor="start" x="80.1" y="411" font-size="14">Hidden truth and evaluation metrics stay outside the gate.</text>
+<rect x="85" y="455" width="370" height="63" rx="9" fill="#e9f4f2" stroke="#7ba59d"/>
+<text text-anchor="start" x="178.8" y="480" font-size="20" font-weight="bold">Reliability Adapter</text>
+<text text-anchor="start" x="105.4" y="502" font-size="14">Translation only; no detector or permission rules</text>
+<rect x="510" y="455" width="175" height="63" rx="9" fill="#fff5dd" stroke="#c2a96c"/>
+<text text-anchor="start" x="526.4" y="480" font-size="14" font-weight="bold">+ Application Context</text>
+<text text-anchor="start" x="519.0" y="502" font-size="13">Health, freshness, impact</text>
+<rect x="85" y="558" width="380" height="62" rx="9" fill="#e9f4f2" stroke="#7ba59d"/>
+<text text-anchor="start" x="212.6" y="584" font-size="20" font-weight="bold">Decision Gate</text>
+<text text-anchor="start" x="150.7" y="606" font-size="14">Deterministic authorization prototype</text>
+<rect x="55" y="660" width="140" height="58" rx="8" fill="#e6f5eb" stroke="#167044"/>
+<text text-anchor="start" x="103.4" y="684" font-size="18" font-weight="bold">GREEN</text><text text-anchor="start" x="101.5" y="706" font-size="14">Execute</text>
+<rect x="205" y="660" width="140" height="58" rx="8" fill="#fff3cd" stroke="#ad7600"/>
+<text text-anchor="start" x="249.1" y="684" font-size="18" font-weight="bold">YELLOW</text><text text-anchor="start" x="224.6" y="706" font-size="14">Hold for review</text>
+<rect x="355" y="660" width="140" height="58" rx="8" fill="#ffe9e9" stroke="#bc3030"/>
+<text text-anchor="start" x="412.0" y="684" font-size="18" font-weight="bold">RED</text><text text-anchor="start" x="408.2" y="706" font-size="14">Block</text>
+<rect x="85" y="758" width="380" height="65" rx="9" fill="#edf0f5" stroke="#8f9daf"/>
+<text text-anchor="start" x="188.6" y="784" font-size="20" font-weight="bold">Application Action</text>
+<text text-anchor="start" x="113.7" y="807" font-size="14">Enforced in the scripted traffic simulator today</text>
+</g>
+<rect x="740" y="175" width="330" height="300" rx="14" fill="#f2effa" stroke="#8875a6" stroke-width="2" stroke-dasharray="9 7"/>
+<text x="765" y="210" font-size="18" font-weight="bold">FUTURE RESEARCH</text>
+<text x="765" y="250" font-size="20" font-weight="bold">Critical Transition /</text>
+<text x="765" y="278" font-size="20" font-weight="bold">Early-Warning Monitor</text>
+<text x="765" y="322" font-size="16">Not implemented today.</text>
+<text x="765" y="352" font-size="16">Not part of the current runtime.</text>
+<text x="765" y="392" font-size="15">Candidate signals and operational</text>
+<text x="765" y="415" font-size="15">boundaries require separate validation.</text>
+<text x="765" y="449" font-size="14">Existing synthetic studies are foundations.</text>
+<text x="755" y="545" font-size="16" font-weight="bold">Semantic boundaries</text>
+<text x="755" y="578" font-size="15">VALID does not automatically mean GREEN.</text>
+<text x="755" y="609" font-size="14">Confidence is not execution-success probability.</text>
+<text x="755" y="640" font-size="15">No calibrated probability-of-safety model.</text>
+<text x="755" y="671" font-size="14">Traffic is a demonstration, not the research goal.</text>
+<text x="40" y="883" font-size="14" fill="#52647b">Current documentation • 2026-09-27 • Synthetic research and prototype behavior do not establish real-world deployment readiness.</text>
+</g></svg>
