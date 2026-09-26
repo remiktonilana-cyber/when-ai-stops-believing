@@ -2,8 +2,9 @@
 
 This index describes the repository as of 2026-09-27. It distinguishes recorded
 research from executable prototypes, scripted demonstrations, and future work.
-The [root README](../README.md) still presents the earlier benchmark; this index
-provides navigation for the wider current project without changing that history.
+The [root README](../README.md) is the current public entry point for the reliability
+problem, research foundation, implemented prototypes, application demo, limitations,
+and future research. This index provides detailed navigation and historical context.
 
 ## Status map
 
