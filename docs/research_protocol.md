@@ -58,6 +58,16 @@ Market patterns will be predefined before evaluation. This separation allows us 
 
 ## 5. AI Models
 
+**Historical provenance:** The list below records planned/candidate models at
+the protocol-design stage, not completed experiments. Grok was not run in the
+completed benchmark experiments. The authoritative execution records are the
+earlier synthetic-market analyses for [DeepSeek](../reports/deepseek_demo_analysis.md),
+[Codex](../reports/codex_demo_analysis.md), and [Qwen](../reports/qwen_demo_analysis.md).
+The later LAI paired-transition experiments evaluated only
+[Qwen](../reports/lai_qwen_paired_analysis.md) and
+[DeepSeek](../reports/lai_deepseek_paired_analysis.md); neither Codex nor Grok
+participated as an LAI paired-transition agent.
+
 This benchmark evaluates multiple AI systems under identical experimental conditions.
 
 The selected models include:
