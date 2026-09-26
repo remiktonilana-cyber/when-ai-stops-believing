@@ -1,0 +1,12 @@
+# Tested offline scientific/runtime and test environment: CPython 3.9.
+# Urban Traffic demo itself uses only the Python standard library.
+
+# Scientific runtime dependencies
+numpy==1.21.5
+pandas==1.4.4
+scipy==1.9.1
+scikit-learn==1.0.2
+statsmodels==0.13.2
+
+# Test runner
+pytest==7.1.2

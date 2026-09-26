@@ -86,6 +86,8 @@ See the [policy](docs/decision_gate_prototype.md), [integration contract](docs/d
 
 ## Run locally
 
+For environment setup and test dependencies, see [local setup](docs/setup.md).
+
 From the repository root, generate the offline demo:
 
 ```sh
