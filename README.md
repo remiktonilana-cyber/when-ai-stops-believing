@@ -1,42 +1,37 @@
 # When AI Stops Believing
 
-Belief revision, reliability monitoring, and decision authorization for AI systems operating in changing environments.
+**What happens when an AI is still confident — but the world that made its belief valid has changed?**
 
-As AI systems move from producing information toward influencing decisions and actions, their outputs need more than a prediction check. A model can continue producing coherent, confident outputs after the environment in which its belief was useful has changed.
+AI systems increasingly influence decisions and actions. A model can remain coherent and confident after its operating relationship has changed. Prediction tells us what the model expects. Reliability asks whether the belief behind that prediction still holds. Authorization asks whether the output should be allowed to act.
 
-This repository investigates that reliability boundary through controlled research and prototypes a **Decision Gate** that separates AI output from permission to act.
+This repository studies that boundary through controlled belief-revision research and prototypes a **Decision Gate** between AI output and external action.
 
-## The problem
+## What we observed
 
-| Question | Concern |
-| --- | --- |
-| “What does the model predict?” | Prediction |
-| “Should the underlying belief still be trusted under current conditions?” | Reliability |
-| “Should this output be allowed to affect the real system?” | Authorization |
+In the later LAI paired-transition benchmark, both agents remained VALID throughout the post-reference window despite the constructed change in the underlying relationship:
 
-These are different problems: **Intelligence ≠ Reliability. Prediction ≠ Authorization.** A useful prediction does not, by itself, establish that execution is appropriate in the current operating context.
+| Transition run | Records | VALID | UNCERTAIN | INVALID | Stable invalidation | Day 710–950 VALID |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Qwen](reports/lai_qwen_paired_analysis.md) | 601 | 600 | 0 | 1 | None observed | 241/241 |
+| [DeepSeek](reports/lai_deepseek_paired_analysis.md) | 601 | 594 | 7 | 0 | None observed | 241/241 |
 
-## What exists today
+**Evidence became available. Belief revision did not necessarily follow—in this controlled benchmark.** Day 710 is an evidence-availability reference produced by the benchmark diagnostic, not the objectively correct or mandatory revision time. These recorded runs are neither a Qwen-versus-DeepSeek ranking nor evidence of a universal property of LLMs.
 
-| Component | Status | Role |
-| --- | --- | --- |
-| LAI / belief-revision research | Research evidence | Studies belief persistence and revision under controlled synthetic transitions. |
-| Reliability Adapter | Implemented prototype | Translates supplied reliability information into the gate contract. |
-| Decision Gate | Implemented prototype | Produces deterministic GREEN / YELLOW / RED authorization decisions. |
-| Urban Traffic Demo | Scripted demonstration | Shows the same proposal and belief receiving different permissions as operational conditions change. |
-| Critical Transition Detection | Future research | Asks whether approaching regime changes can be detected before existing beliefs visibly fail. No operational monitor is implemented. |
+## Belief is not permission
 
-See the [documentation status map](docs/README.md) for implementation and research references.
+**Prediction ≠ Reliability ≠ Authorization.** If appropriate belief revision cannot simply be assumed, an operational system may need a separate authorization boundary before AI output affects the external system.
+
+The Decision Gate prototypes that boundary. It evaluates supplied reliability information and operating context to determine permission; it does not solve belief revision itself.
 
 ## Architecture
 
 ![Current research and authorization architecture, with future research separated](docs/assets/architecture.svg)
 
-LAI research evaluates belief behavior under specified protocols. The **Reliability Adapter translates supplied information**; it does not independently infer real-world reliability. Application context—such as data freshness, system health, consequence, and reversibility—enters separately.
+LAI research evaluates belief behavior. The **Reliability Adapter translates supplied information**, without independently inferring real-world reliability. Application context—freshness, health, consequence, and reversibility—enters separately.
 
-The **Decision Gate** applies deterministic prototype policy to permit execution, require review, or block execution. It is not a calibrated probability-of-safety model. Execution and enforcement remain separate application responsibilities. Hidden benchmark truth and retrospective evaluation metrics are not runtime gate inputs.
+The **Decision Gate** applies deterministic policy, not calibrated safety probabilities. Execution remains an application responsibility. Hidden benchmark truth and retrospective metrics are not gate inputs.
 
-Read the [current architecture](docs/current_architecture.md) for contracts and boundaries. The future monitor shown separately in the diagram is not part of the current runtime.
+See the [current architecture](docs/current_architecture.md). The separately illustrated future monitor is not implemented.
 
 ## See the demo
 
@@ -50,27 +45,33 @@ Read the [current architecture](docs/current_architecture.md) for contracts and 
 | Environment shift | YELLOW | HELD |
 | Operational failure | RED | BLOCKED |
 
-The belief information alone does not determine whether an action should be authorized. An explicit context shift causes a hold; an unhealthy controller blocks execution even with the same VALID belief.
+Belief alone does not authorize action: context shift causes a hold; controller failure blocks execution despite the unchanged VALID belief.
 
-This is a **synthetic scenario with scripted belief input and simulated execution**, with no live traffic control. It demonstrates authorization behavior, not traffic optimization or real-city safety. Traffic is an application example, not the core research problem.
+This is a synthetic, scripted demonstration of authorization behavior—not a traffic optimization or live-control system.
 
 [Run and inspect the Urban Traffic demo](applications/urban_traffic/README.md).
 
+## What exists today
+
+| Component | Status | Role |
+| --- | --- | --- |
+| LAI / belief-revision research | Research evidence | Studies belief persistence and revision under controlled synthetic transitions. |
+| Reliability Adapter | Implemented prototype | Translates supplied reliability information into the gate contract. |
+| Decision Gate | Implemented prototype | Produces deterministic GREEN / YELLOW / RED authorization decisions. |
+| Urban Traffic Demo | Scripted demonstration | Shows the same proposal and belief receiving different permissions as operational conditions change. |
+| Critical Transition Detection | Future research | Asks whether approaching regime changes can be detected before existing beliefs visibly fail. No operational monitor is implemented. |
+
+See the [documentation status map](docs/README.md) for implementation and research references.
+
 ## Research foundation
 
-**When an environment changes, can an AI agent appropriately revise a previously supported belief?**
+Controlled synthetic transitions provide known environmental ground truth while keeping hidden variables outside the [agent observation contract](docs/lai_agent_contract.md). Belief changes also occurred in controls without the structural transition, so a single switch is insufficient evidence of reliable adaptation under this protocol.
 
-Controlled synthetic transition experiments provide known environmental ground truth while keeping hidden variables outside the [agent observation contract](docs/lai_agent_contract.md).
+The [frozen transition specification](reports/lai_agent_transition_specification.md) and [canonical transition audit](reports/lai_canonical_transition_audit.md) define the later paired research linked above. Its completed agents were Qwen and DeepSeek.
 
-The later LAI paired-transition experiments recorded cases where agents continued to output VALID beliefs after the benchmark evidence reference for structural change. Belief changes also occurred in controls without the structural transition. A single belief switch is therefore insufficient evidence of reliable adaptation in these experiments. The reference time is an evaluation benchmark, not a uniquely correct revision time.
-
-These are observations under the repository's protocols, not universal model behavior or rankings. Read the [frozen transition specification](reports/lai_agent_transition_specification.md), [canonical transition audit](reports/lai_canonical_transition_audit.md), and recorded [Qwen](reports/lai_qwen_paired_analysis.md) and [DeepSeek](reports/lai_deepseek_paired_analysis.md) paired analyses.
-
-The **earlier synthetic-market benchmark** is a separate research track with its own [protocol](docs/benchmark_protocol.md), [evaluation design](docs/evaluation_engine_design.md), and [recorded analysis](reports/model_comparison_analysis.md). Its metrics should not be merged with the later paired-transition findings. The [research index](docs/README.md#two-distinct-research-tracks) connects both tracks and their provenance.
+The **earlier synthetic-market benchmark** separately evaluated DeepSeek, Codex, and Qwen under its own [protocol](docs/benchmark_protocol.md), [evaluation design](docs/evaluation_engine_design.md), and [recorded analysis](reports/model_comparison_analysis.md). Codex was not a later LAI paired-transition agent; Grok was not a completed experiment. Do not merge the two tracks' metrics. See the [research index](docs/README.md#two-distinct-research-tracks) for provenance.
 
 ## Decision Gate
-
-The gate asks a different question from the model:
 
 > Given the available reliability information, operating context, system health, and decision impact, what level of execution permission is appropriate?
 
@@ -86,9 +87,9 @@ See the [policy](docs/decision_gate_prototype.md), [integration contract](docs/d
 
 ## Run locally
 
-For environment setup and test dependencies, see [local setup](docs/setup.md).
+See [local setup](docs/setup.md) for dependencies.
 
-From the repository root, generate the offline demo:
+From the repository root:
 
 ```sh
 python -m applications.urban_traffic.run_demo --output-dir /tmp/urban-traffic-demo
