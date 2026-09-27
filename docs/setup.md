@@ -12,7 +12,44 @@ Open the generated `index.html`. You can use `demo-output/` instead of the
 temporary directory; that repository-root output directory is ignored by Git.
 Arbitrary custom output directories are not automatically ignored.
 
-## Full offline test suite
+## Lightweight Decision Gate usage
+
+Install the checkout into a virtual environment:
+
+```sh
+python3.9 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
+```
+
+From another directory or Python project, import the installed interface:
+
+```python
+from when_ai_stops_believing import DecisionRequest, GateDecision, evaluate
+```
+
+See the [Developer Contract](developer_contract.md) for a complete working example,
+input ownership, permission semantics, and application responsibilities.
+
+The optional adapter interface is in `when_ai_stops_believing.reliability`, which
+exports `AgentBelief`, `BeliefStatus`, `ReliabilityObservation`, and
+`to_decision_request`. These are direct re-exports of the existing objects.
+Gate-only runtime uses the standard library: scientific dependencies, provider
+credentials, and the traffic application are not required. Applications must
+separately enforce the returned permission; installation adds no executor.
+
+For development, `python -m pip install -e .` provides an editable installation.
+Build isolation may download setuptools; that is a build requirement, not a gate
+runtime dependency. Package version 1.1.0 is separate from gate policy version 1.
+
+The wheel ships `when_ai_stops_believing` and the existing `src` namespace to
+preserve object identity and `src.*` imports. Shipping a generic `src` namespace
+is a transitional v1.1 compatibility tradeoff: it may conflict with another
+project using that name. Research modules are included without importing them;
+using those modules requires the research dependencies below. Applications,
+reports, datasets, and tests are not installed as packages.
+
+## Full research environment
 
 Use CPython 3.9 on macOS or Linux for the tested environment. The checkpoint
 runner imports the Unix-only standard-library module `fcntl`; the full suite

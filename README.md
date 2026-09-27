@@ -51,6 +51,21 @@ This is a synthetic, scripted demonstration of authorization behavior—not a tr
 
 [Run and inspect the Urban Traffic demo](applications/urban_traffic/README.md).
 
+## Use the Decision Gate
+
+Evaluate a proposed action against supplied reliability information and operating
+context; your application remains responsible for execution.
+
+Install from the repository root in your Python environment:
+
+```sh
+python -m pip install .
+```
+
+See the [Developer Contract](docs/developer_contract.md) for a complete example and
+permission semantics, or [setup instructions](docs/setup.md#lightweight-decision-gate-usage)
+to create an isolated environment.
+
 ## What exists today
 
 | Component | Status | Role |

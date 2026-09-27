@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "when-ai-stops-believing"
+version = "1.1.0"
+description = "Deterministic Decision Gate prototype for supplied reliability information"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools]
+packages = ["when_ai_stops_believing", "src"]
